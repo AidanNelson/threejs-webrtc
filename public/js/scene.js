@@ -163,6 +163,7 @@ class Scene {
 		for (let _id in _clientProps) {
 			// we'll update ourselves separately to avoid lag...
 			if (_id != id) {
+				console.log('id / id: ' , _id , " / ", id);
 				clients[_id].desiredPosition = new THREE.Vector3().fromArray(_clientProps[_id].position);
 				clients[_id].desiredRotation = new THREE.Quaternion().fromArray(_clientProps[_id].rotation)
 			}

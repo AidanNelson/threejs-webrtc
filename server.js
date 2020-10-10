@@ -37,40 +37,87 @@ let iceServers = [{url:'stun:stun.l.google.com:19302'},
 
 let clients = {};
 
+// this is how we will store client locations:
+let clientLocations = new Map();
+// {
+//   id: "myCoolRoomId"
+// }
+
+
+//https://cmsdk.com/javascript/nodejs-socket-io-get-all-clients-on-room.html
+function getClientsInRoom(socketId, room) {
+  // get array of socket ids in this room
+  var socketIds = io.sockets.adapter.rooms[room];
+  var clientsInRoom = {};
+  if (socketIds && socketIds.length > 0) {
+      //socketsCount = socketIds.lenght;
+      // push every client to the result array
+      for (var i = 0, len = socketIds.length; i < len; i++) {
+          // check if the socket is not the requesting
+          // socket
+          let id = Object.keys(socketIds.sockets)[i];
+          if (id != socketId) {
+              clientsInRoom[id] = clients[id];
+          }
+      }
+  }
+  return clientsInRoom;
+}
+
 //Socket setup
 io.on('connection', client => {
 
   console.log('User ' + client.id + ' connected, there are ' + io.engine.clientsCount + ' clients connected');
 
-  //Add a new client indexed by his id
-  clients[client.id] = {
-    position: [0, 0.5, 0],
-    rotation: [0, 0, 0, 1] // stored as XYZW values of Quaternion
-  }
 
-  //Make sure to send the client it's ID and a list of ICE servers for WebRTC network traversal 
-  client.emit('introduction', client.id, io.engine.clientsCount, Object.keys(clients), iceServers);
+  client.on('join-room', (data) => {
+    let roomId = data.roomId;
+    client.join(roomId);
+    clientLocations.set(client.id, roomId);
+    console.log(`Adding client to room ${roomId}`);
 
-  // also give the client all existing clients positions:
-  client.emit('userPositions', clients);
+    var clientsInRoom = getClientsInRoom(client.id, roomId);
 
-  //Update everyone that the number of users has changed
-  io.sockets.emit('newUserConnected', io.engine.clientsCount, client.id, Object.keys(clients));
+    
+    //Add a new client indexed by his id
+    clients[client.id] = {
+      position: [0, 0.5, 0],
+      rotation: [0, 0, 0, 1] // stored as XYZW values of Quaternion
+    }
+        
+
+
+    //Make sure to send the client it's ID and a list of ICE servers for WebRTC network traversal 
+    client.emit('introduction', client.id, io.engine.clientsCount, Object.keys(clientsInRoom), iceServers);
+
+    // also give the client all existing clients positions:
+    client.emit('userPositions', clientsInRoom);
+
+    //Update everyone that the number of users has changed
+    io.to(roomId).emit('newUserConnected', io.engine.clientsCount, client.id, Object.keys(clientsInRoom));
+    })
 
   client.on('move', (data) => {
     if (clients[client.id]) {
       clients[client.id].position = data[0];
       clients[client.id].rotation = data[1];
     }
-    io.sockets.emit('userPositions', clients);
+    let clientLocation = clientLocations.get(client.id);
+    var clientsInRoom = getClientsInRoom(client.id, clientLocation);
+
+    io.to(clientLocation).emit('userPositions', clientsInRoom);
   });
 
   //Handle the disconnection
   client.on('disconnect', () => {
 
+
+
     //Delete this client from the object
     delete clients[client.id];
-    io.sockets.emit('userDisconnected', io.engine.clientsCount, client.id, Object.keys(clients));
+    let clientLocation = clientLocations.get(client.id);
+    var clientsInRoom = getClientsInRoom(client.id, clientLocation);
+    io.to(clientLocation).emit('userDisconnected', io.engine.clientsCount, client.id, Object.keys(clientsInRoom));
     console.log('User ' + client.id + ' diconnected, there are ' + io.engine.clientsCount + ' clients connected');
 
   });

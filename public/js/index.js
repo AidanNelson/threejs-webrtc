@@ -13,6 +13,8 @@
 let socket;
 let id;
 
+let roomId = false;
+
 // array of connected clients
 let clients = {};
 
@@ -49,6 +51,9 @@ let mediaConstraints = {
 
 window.onload = async () => {
 	console.log("Window loaded.");
+
+	roomId = getRoomID();
+	console.log(`Room ID: ${roomId}`);
 
 	// first get user media
 	localMediaStream = await getMedia(mediaConstraints);
@@ -92,13 +97,30 @@ function addTracksToPeerConnection(_stream, _pc) {
 ////////////////////////////////////////////////////////////////////////////////
 // Socket.io
 ////////////////////////////////////////////////////////////////////////////////
+function getRoomID(){
+	var searchParams = new URLSearchParams(window.location.search);
+	let roomId = false
+
+	//Iterate the search parameters.
+	for (let p of searchParams) {
+	console.log(p);
+	}
+	if(searchParams.has("room")){
+		roomId = searchParams.get("room");
+	}
+	return roomId;
+}
 
 // establishes socket connection
 function initSocketConnection() {
 	console.log("Initializing socket.io...");
 	socket = io().connect("http://localhost:1989");
 
-	socket.on('connect', () => { });
+	socket.on('connect', () => { 
+		if(roomId){
+			socket.emit('join-room', {roomId});
+		}
+	});
 
 	//On connection server sends the client his ID and a list of all keys
 	socket.on('introduction', (_id, _clientNum, _ids, _iceServers) => {
