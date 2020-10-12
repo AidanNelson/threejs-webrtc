@@ -112,13 +112,9 @@ function getRoomID() {
 function initSocketConnection() {
   console.log("Initializing socket.io...");
 
-  if (process.env.PRODUCTION) {
-    socket = io("wss://yorb.itp.io", {
-      path: "/rooms/socket.io",
-    });
-  } else {
-    socket = io("https://localhost:1989");
-  }
+  socket = io("wss://yorb.itp.io", {
+    path: "/rooms/socket.io",
+  });
 
   socket.on("connect", () => {
     if (roomId) {
