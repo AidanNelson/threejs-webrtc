@@ -65,6 +65,7 @@ class Scene {
 		this.scene.add(new THREE.AxesHelper(10));
 
 		// Start the loop
+		this.frameCount = 0;
 		this.update();
 	}
 
@@ -185,6 +186,23 @@ class Scene {
 			}
 		}
 	}
+	
+	updateClientVolumes() {
+		for (let _id in clients) {
+			let audioEl = document.getElementById(_id+"_audio");
+			if (audioEl) {
+				let distSquared = this.camera.position.distanceToSquared(clients[_id].group.position);
+				console.log('dist:',distSquared);
+				if (distSquared > 500) {
+					audioEl.volume = 0;
+				} else {
+					// from lucasio here: https://discourse.threejs.org/t/positionalaudio-setmediastreamsource-with-webrtc-question-not-hearing-any-sound/14301/29
+					let volume = Math.min(1, 100 / distSquared);
+					audioEl.volume = volume;
+				}
+			}
+		}
+	}
 
 	//////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////
@@ -203,6 +221,7 @@ class Scene {
 
 	update() {
 		requestAnimationFrame(() => this.update());
+		this.frameCount ++;
 
 		// send movement stats to the socket server if any of the keys are pressed
 		let sendStats = false;
@@ -214,6 +233,9 @@ class Scene {
 		}
 		if (sendStats) { this.movementCallback(); }
 
+		if (this.frameCount % 20 === 0) {
+			this.updateClientVolumes();
+		}
 		this.updatePositions();
 		this.controls.update();
 		this.render();

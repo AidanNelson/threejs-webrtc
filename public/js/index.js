@@ -262,6 +262,7 @@ function createPeerConnection(_id) {
 		// 2. Global Audio: Using DOM <audio> element
 		// Works in Firefox and Chrome
 		let audioEl = document.createElement('audio');
+		audioEl.setAttribute("id",_id+"_audio");
 		audioEl.srcObject = audioStream;
 		audioEl.play();
 		audioEl.style = "visibility: hidden;";
