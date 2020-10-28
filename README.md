@@ -10,7 +10,7 @@ This [three.js](threejs.org) template allows multiplayer three.js scenes with in
     ```
 2. Navigate into the local folder and install Node dependencies:
     ```bash
-    $ cd ~/Desktop/threejs-webrtc
+    $ cd threejs-webrtc
     $ npm install
     ```
 3. Start the server:
