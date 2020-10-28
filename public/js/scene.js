@@ -192,13 +192,17 @@ class Scene {
 			let audioEl = document.getElementById(_id+"_audio");
 			if (audioEl) {
 				let distSquared = this.camera.position.distanceToSquared(clients[_id].group.position);
-				console.log('dist:',distSquared);
+
+				// console.log('Dist:',this.camera.position.distanceTo(clients[_id].group.position));
+				// console.log('DistSquared:',distSquared);
 				if (distSquared > 500) {
+					// console.log('setting vol to 0')
 					audioEl.volume = 0;
 				} else {
 					// from lucasio here: https://discourse.threejs.org/t/positionalaudio-setmediastreamsource-with-webrtc-question-not-hearing-any-sound/14301/29
-					let volume = Math.min(1, 100 / distSquared);
+					let volume = Math.min(1, 10 / distSquared);
 					audioEl.volume = volume;
+					// console.log('setting vol to',volume)
 				}
 			}
 		}

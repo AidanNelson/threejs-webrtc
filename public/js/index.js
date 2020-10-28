@@ -261,14 +261,18 @@ function createPeerConnection(_id) {
 
 		// 2. Global Audio: Using DOM <audio> element
 		// Works in Firefox and Chrome
-		let audioEl = document.createElement('audio');
-		audioEl.setAttribute("id",_id+"_audio");
+		let audioEl = document.getElementById(_id+"_audio");
+		if (!audioEl){
+			audioEl = document.createElement('audio');
+			audioEl.setAttribute("id",_id+"_audio");
+			audioEl.style = "visibility: hidden;";
+			audioEl.controls = 'controls';
+			audioEl.volume = 1;
+			document.body.appendChild(audioEl);
+		}
 		audioEl.srcObject = audioStream;
 		audioEl.play();
-		audioEl.style = "visibility: hidden;";
-		audioEl.controls = 'controls';
-		audioEl.volume = 1;
-		document.body.appendChild(audioEl);
+	
 
 		const remoteVideoElement = document.getElementById(_id);
 		if (remoteVideoElement) {
