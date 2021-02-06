@@ -21,7 +21,7 @@ const port = process.env.PORT || 1989;
 
 //Server
 const server = app.listen(port);
-console.log('Server is running localhost on port: ' + port);
+console.log('Server is running on http://localhost:' + port);
 
 /////SOCKET.IO///////
 const io = require('socket.io').listen(server);
