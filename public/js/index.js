@@ -189,10 +189,6 @@ function initSocketConnection() {
     }
   });
 
-  socket.on("call-rejected", (data) => {
-    alert(`User: "Socket: ${data.socket}" rejected your call.`);
-  });
-
   socket.on("iceCandidateFound", (data) => {
     clients[data.socket].peerConnection.addIceCandidate(data.candidate);
   });
