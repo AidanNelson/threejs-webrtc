@@ -19,13 +19,10 @@ class Scene {
 
     //Utility
     this.width = window.innerWidth;
-    this.height = window.innerHeight - 400;
+    this.height = window.innerHeight - 100;
 
     //Add Player
     this.addSelf();
-
-    // add lights
-    this.addLights();
 
     //THREE Camera
     this.camera = new THREE.PerspectiveCamera(
@@ -63,6 +60,9 @@ class Scene {
     // Helpers
     this.scene.add(new THREE.GridHelper(500, 500));
     this.scene.add(new THREE.AxesHelper(10));
+
+    this.addLights();
+    createEnvironment(this.scene);
 
     // Start the loop
     this.frameCount = 0;
@@ -141,7 +141,7 @@ class Scene {
   }
 
   // snap to position and rotation if we get close
-  updatePositions() {
+  interpolatePositions() {
     let snapDistance = 0.5;
     let snapAngle = 0.2; // radians
     for (let _id in clients) {
@@ -226,7 +226,7 @@ class Scene {
       this.movementCallback();
     }
 
-    this.updatePositions();
+    this.interpolatePositions();
     this.controls.update();
     this.render();
   }
