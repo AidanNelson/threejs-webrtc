@@ -143,6 +143,7 @@ function initSocketConnection() {
     if (_id != id) {
       console.log("A user disconnected with the id: " + _id);
       glScene.removeClient(_id);
+	  removeClientVideoElementAndCanvas(_id);
       delete clients[_id];
     }
   });
@@ -214,7 +215,7 @@ function addClient(_id) {
   clients[_id].isAlreadyCalling = false;
 
   // create video element:
-  createClientVideoElement(_id);
+  createClientMediaElements(_id);
 
   // add client to scene:
   glScene.addClient(_id);
@@ -243,31 +244,12 @@ function createPeerConnection(_id) {
     let videoStream = new MediaStream([_remoteStream.getVideoTracks()[0]]);
     let audioStream = new MediaStream([_remoteStream.getAudioTracks()[0]]);
 
-    //////////////////////////////////////////////////////////////////////
-    // UNCOMMENT ONE OF THE FOLLOWING APPROACHES FOR INCOMING AUDIO
-    //////////////////////////////////////////////////////////////////////
-    // 1. Positional Audio
-    // Working in Firefox 75.0
-    // Not working in Chrome: https://bugs.chromium.org/p/chromium/issues/detail?id=933677
-    // let audioSource = new THREE.PositionalAudio(glScene.listener);
-    // audioSource.setMediaStreamSource(audioStream);
-    // audioSource.setRefDistance(10);
-    // audioSource.setRolloffFactor(10);
-    // clients[_id].group.add(audioSource);
-
-    // 2. Global Audio: Using DOM <audio> element
-    // Works in Firefox and Chrome
+    // get access to the audio element:
     let audioEl = document.getElementById(_id + "_audio");
-    if (!audioEl) {
-      audioEl = document.createElement("audio");
-      audioEl.setAttribute("id", _id + "_audio");
-      // audioEl.style = "visibility: hidden;";
-      audioEl.controls = "controls";
-      audioEl.volume = 1;
-      document.body.appendChild(audioEl);
+    if (audioEl) {
+      audioEl.srcObject = audioStream;
     }
-    audioEl.srcObject = audioStream;
-    audioEl.play();
+    // audio element should start playing as soon as data is loaded
 
     const remoteVideoElement = document.getElementById(_id + "_video");
     if (remoteVideoElement) {
@@ -358,7 +340,7 @@ function createLocalVideoElement() {
 }
 
 // created <video> element using client ID
-function createClientVideoElement(_id) {
+function createClientMediaElements(_id) {
   console.log("Creating <video> element for client with id: " + _id);
 
   const videoElement = document.createElement("video");
@@ -370,6 +352,17 @@ function createClientVideoElement(_id) {
   // videoElement.style = "visibility: hidden;";
 
   document.body.appendChild(videoElement);
+
+  // create audio element for client
+  let audioEl = document.createElement("audio");
+  audioEl.setAttribute("id", _id + "_audio");
+  audioEl.controls = "controls";
+  audioEl.volume = 1;
+  document.body.appendChild(audioEl);
+
+  audioEl.addEventListener("loadeddata", () => {
+    audioEl.play();
+  });
 }
 
 // remove <video> element and corresponding <canvas> using client ID

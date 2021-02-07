@@ -82,23 +82,15 @@ class Scene {
   // Clients 👫
 
   addSelf() {
-    let _body = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshNormalMaterial()
-    );
-
     let videoMaterial = makeVideoMaterial("local");
 
     let _head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), videoMaterial);
 
-    // set position of head before adding to parent object
-    _body.position.set(0, 0, 0);
-    _head.position.set(0, 1, 0);
+    _head.position.set(0, 0, 0);
 
     // https://threejs.org/docs/index.html#api/en/objects/Group
     this.playerGroup = new THREE.Group();
     this.playerGroup.position.set(0, 0.5, 0);
-    this.playerGroup.add(_body);
     this.playerGroup.add(_head);
 
     // add group to scene
@@ -107,22 +99,16 @@ class Scene {
 
   // add a client meshes, a video element and  canvas for three.js video texture
   addClient(_id) {
-    let _body = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshNormalMaterial()
-    );
-
     let videoMaterial = makeVideoMaterial(_id);
 
     let _head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), videoMaterial);
 
     // set position of head before adding to parent object
-    _body.position.set(0, 0, 0);
-    _head.position.set(0, 1, 0);
+
+    _head.position.set(0, 0, 0);
 
     // https://threejs.org/docs/index.html#api/en/objects/Group
     var group = new THREE.Group();
-    group.add(_body);
     group.add(_head);
 
     // add group to scene
@@ -132,15 +118,11 @@ class Scene {
     clients[_id].head = _head;
     clients[_id].desiredPosition = new THREE.Vector3();
     clients[_id].desiredRotation = new THREE.Quaternion();
-    clients[_id].oldPos = group.position;
-    clients[_id].oldRot = group.quaternion;
     clients[_id].movementAlpha = 0;
   }
 
   removeClient(_id) {
     this.scene.remove(clients[_id].group);
-
-    removeClientVideoElementAndCanvas(_id);
   }
 
   // overloaded function can deal with new info or not
@@ -197,8 +179,6 @@ class Scene {
           clients[_id].group.position
         );
 
-        // console.log('Dist:',this.camera.position.distanceTo(clients[_id].group.position));
-        // console.log('DistSquared:',distSquared);
         if (distSquared > 500) {
           // console.log('setting vol to 0')
           audioEl.volume = 0;
@@ -209,21 +189,6 @@ class Scene {
           // console.log('setting vol to',volume)
         }
       }
-    }
-  }
-
-  updateClientVideoMaterials() {
-    for (let _id in clients) {
-      let head = clients[_id].head;
-      let newVideoMaterial = makeVideoMaterial[_id];
-      this.scene.remove(head);
-      let newHead = new THREE.Mesh(
-        new THREE.BoxGeometry(1, 1, 1),
-        newVideoMaterial
-      );
-      clients[_id].group.add(newHead);
-      clients[_id].head = newHead;
-      newHead.position.y += 1;
     }
   }
 
@@ -271,9 +236,7 @@ class Scene {
     if (this.frameCount % 20 === 0) {
       this.updateClientVolumes();
     }
-    // if (this.frameCount % 250 === 0) {
-    // 	this.updateClientVideoMaterials();
-    // }
+
     this.updatePositions();
     this.controls.update();
     this.render();
@@ -306,6 +269,10 @@ class Scene {
     this.keyState[event.keyCode || event.which] = false;
   }
 }
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+// Utilities
 
 function makeVideoMaterial(_id) {
   let videoElement = document.getElementById(_id + "_video");
