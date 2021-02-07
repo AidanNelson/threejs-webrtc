@@ -96,7 +96,7 @@ function addTracksToPeerConnection(_stream, _pc) {
 // establishes socket connection
 function initSocketConnection() {
   console.log("Initializing socket.io...");
-  socket = io().connect("http://localhost:1989");
+  socket = io();
 
   socket.on("connect", () => {});
 

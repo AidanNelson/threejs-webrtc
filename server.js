@@ -26,7 +26,7 @@ const server = app.listen(port);
 console.log("Server is running on http://localhost:" + port);
 
 /////SOCKET.IO///////
-const io = require("socket.io").listen(server);
+const io = require("socket.io")().listen(server);
 
 // Network Traversal
 // Could also use network traversal service here (Twilio, for example):
