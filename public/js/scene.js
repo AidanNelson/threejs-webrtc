@@ -221,6 +221,8 @@ class Scene {
     requestAnimationFrame(() => this.update());
     this.frameCount++;
 
+    updateEnvironment();
+
     if (this.frameCount % 25 === 0) {
       this.updateClientVolumes();
       this.movementCallback();
