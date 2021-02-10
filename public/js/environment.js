@@ -1,17 +1,44 @@
-let myMesh;
-
 function createEnvironment(scene) {
   console.log("Adding environment");
+  loadModel(scene);
 
-  let texture = new THREE.TextureLoader().load("../assets/texture.png");
-  let myGeometry = new THREE.SphereGeometry(3, 12, 12);
-  let myMaterial = new THREE.MeshBasicMaterial({ map: texture });
-  myMesh = new THREE.Mesh(myGeometry, myMaterial);
-  myMesh.position.set(5, 2, 5);
-  scene.add(myMesh);
+  // White directional light at half intensity shining from the top.
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  scene.add(directionalLight);
 }
 
-
 function updateEnvironment(scene) {
-  // myMesh.position.x += 0.01;
+  // you can update the environment here
+}
+
+function loadModel(scene) {
+  // model
+  const onProgress = function (xhr) {
+    if (xhr.lengthComputable) {
+      const percentComplete = (xhr.loaded / xhr.total) * 100;
+      console.log(Math.round(percentComplete, 2) + "% downloaded");
+    }
+  };
+
+  const onError = function () {};
+
+  const manager = new THREE.LoadingManager();
+
+  new THREE.MTLLoader(manager)
+    .setPath("../assets/oaktree/")
+    .load("oakTree.mtl", function (materials) {
+      materials.preload();
+
+      new THREE.OBJLoader(manager)
+        .setMaterials(materials)
+        .setPath("../assets/oaktree/")
+        .load(
+          "oakTree.obj",
+          function (object) {
+            scene.add(object);
+          },
+          onProgress,
+          onError
+        );
+    });
 }
