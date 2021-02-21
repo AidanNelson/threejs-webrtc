@@ -45,9 +45,6 @@ class Scene {
     this.renderer.setClearColor(new THREE.Color("lightblue"));
     this.renderer.setSize(this.width, this.height);
 
-    // add controls:
-    this.controls = new THREE.PlayerControls(this.camera, this.playerGroup);
-
     //Push the canvas to the DOM
     let domElement = document.getElementById("canvas-container");
     domElement.append(this.renderer.domElement);
@@ -66,6 +63,28 @@ class Scene {
 
     // Start the loop
     this.frameCount = 0;
+
+    // Add Controls for the scene
+    // Option 1: our third person player controls:
+    // this.controls = new THREE.PlayerControls(this.camera, this.playerGroup);
+
+    // Option 2: using map controls:
+    this.controls = new THREE.MapControls(
+      this.camera,
+      this.renderer.domElement
+    );
+
+    this.controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+    this.controls.dampingFactor = 0.05;
+
+    this.controls.screenSpacePanning = false;
+
+    this.controls.minDistance = 10;
+    this.controls.maxDistance = 500;
+
+    this.controls.maxPolarAngle = Math.PI / 2;
+
+    // Start the update loop
     this.update();
   }
 
@@ -221,7 +240,7 @@ class Scene {
     requestAnimationFrame(() => this.update());
     this.frameCount++;
 
-    updateEnvironment();
+    updateEnvironment(this.scene);
 
     if (this.frameCount % 25 === 0) {
       this.updateClientVolumes();
