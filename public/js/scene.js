@@ -126,8 +126,6 @@ class Scene {
     clients[_id].desiredPosition = new THREE.Vector3();
     clients[_id].desiredRotation = new THREE.Quaternion();
     clients[_id].movementAlpha = 0;
-
-
   }
 
   removeClient(_id) {
@@ -233,38 +231,50 @@ class Scene {
   }
 
   checkRaycaster() {
-    
     // clear the transformations from before
     this.activeLink = false;
+    this.activeSpawnPoint = false;
+    this.activeSpawnNormal = false;
     for (let i = 0; i < this.previousIntersects.length; i++) {
       let obj = this.previousIntersects[i];
-      obj.scale.set(1,1,1);
+      obj.scale.set(1, 1, 1);
     }
 
     // update the ray with the current camera and mouse position
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
     // calculate objects intersecting the ray
-    const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+    const intersects = this.raycaster.intersectObjects(
+      this.scene.children,
+      true
+    );
 
-    for (let i = 0; i < intersects.length; i++) {
+    for (let i = 0; i < 1; i++) {
       let obj = intersects[i].object;
 
+      // test our raycaster by logging the object the ray has intersected with to the console:
       // console.log(obj);
 
       // first, let's check if we have marked the intersected object as interactable!
       // 'continue' means that the subsequent code won't run for this iteraction of the for loop
       if (!obj.userData.interactable) continue;
-      
-      // let's try changing the object scale
-      obj.scale.set(1.25,1.25,1.25);
 
-      if (obj.userData.link){
-        console.log(obj.userData.link)
+      // let's try changing the object scale
+      obj.scale.set(1.25, 1.25, 1.25);
+
+      // if we've  added a 'link' to the objects user data, set that to our active link
+      if (obj.userData.link) {
         this.activeLink = obj.userData.link;
       }
 
-      // finally, if we'd like to reset object parameters after we're  done interacting, 
+      // if we want to spawn something on the surface of another object, we can store the
+      // intersection point and the 'normal' (i.e. the angle of the surface) here:
+      if (obj.userData.isSpawnSurface) {
+        this.activeSpawnPoint = intersects[i].point;
+        this.activeSpawnNormal = intersects[i].face.normal;
+      }
+
+      // finally, if we'd like to reset object parameters after we're  done interacting,
       // let's store which object we have interacted with:
       this.previousIntersects.push(obj);
     }
@@ -282,9 +292,22 @@ class Scene {
   }
 
   onMouseUp() {
-    console.log('click');
-    if (this.activeLink){
+    console.log("click");
+    if (this.activeLink) {
       window.open(this.activeLink);
+    }
+
+    if (this.activeSpawnPoint) {
+      console.log()
+      let geo = new THREE.TetrahedronGeometry(1, 0);
+      let mat = new THREE.MeshBasicMaterial();
+      let mesh = new THREE.Mesh(geo, mat);
+
+      mesh.position.copy(this.activeSpawnPoint.x, this.activeSpawnPoint.y, this.activeSpawnPoint.z);
+      mesh.lookAt(this.activeSpawnNormal.x,this.activeSpawnNormal.y,this.activeSpawnNormal.z);
+      console.log(this.activeSpawnNormal);
+
+      this.scene.add(mesh);
     }
   }
 

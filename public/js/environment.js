@@ -10,6 +10,7 @@ function createEnvironment(scene) {
   myMesh.position.set(5, 2, 5);
   scene.add(myMesh);
   myMesh.userData.interactable = true;
+  myMesh.userData.isSpawnSurface = true;
 }
 
 
