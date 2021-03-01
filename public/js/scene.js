@@ -64,6 +64,12 @@ class Scene {
     this.addLights();
     createEnvironment(this.scene);
 
+    // set up the raycaster:
+    this.setUpRaycaster();
+
+    // add wikipedia elements:
+    addElementsToScene(this.scene, "cat");
+
     // Start the loop
     this.frameCount = 0;
     this.update();
@@ -85,7 +91,7 @@ class Scene {
     let videoMaterial = makeVideoMaterial("local");
 
     let _head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), videoMaterial);
-
+    _head.userData.interactable = true;
     _head.position.set(0, 0, 0);
 
     // https://threejs.org/docs/index.html#api/en/objects/Group
@@ -95,6 +101,8 @@ class Scene {
 
     // add group to scene
     this.scene.add(this.playerGroup);
+
+    this.playerGroup.userData.interactable = true;
   }
 
   // add a client meshes, a video element and  canvas for three.js video texture
@@ -102,7 +110,6 @@ class Scene {
     let videoMaterial = makeVideoMaterial(_id);
 
     let _head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), videoMaterial);
-
     // set position of head before adding to parent object
 
     _head.position.set(0, 0, 0);
@@ -119,6 +126,8 @@ class Scene {
     clients[_id].desiredPosition = new THREE.Vector3();
     clients[_id].desiredRotation = new THREE.Quaternion();
     clients[_id].movementAlpha = 0;
+
+
   }
 
   removeClient(_id) {
@@ -213,6 +222,72 @@ class Scene {
     ];
   }
 
+  // In order to use a raycaster in our scene, we first need to create a raycaster
+  // and make sure we are storing the position of the mouse (using the onMouseMove event listener):
+  setUpRaycaster() {
+    window.addEventListener("mousemove", (e) => this.onMouseMove(e), false);
+    window.addEventListener("mouseup", (e) => this.onMouseUp(e), false);
+    this.mouse = new THREE.Vector2();
+    this.raycaster = new THREE.Raycaster();
+    this.previousIntersects = [];
+  }
+
+  checkRaycaster() {
+    
+    // clear the transformations from before
+    this.activeLink = false;
+    for (let i = 0; i < this.previousIntersects.length; i++) {
+      let obj = this.previousIntersects[i];
+      obj.scale.set(1,1,1);
+    }
+
+    // update the ray with the current camera and mouse position
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+
+    // calculate objects intersecting the ray
+    const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+
+    for (let i = 0; i < intersects.length; i++) {
+      let obj = intersects[i].object;
+
+      // console.log(obj);
+
+      // first, let's check if we have marked the intersected object as interactable!
+      // 'continue' means that the subsequent code won't run for this iteraction of the for loop
+      if (!obj.userData.interactable) continue;
+      
+      // let's try changing the object scale
+      obj.scale.set(1.25,1.25,1.25);
+
+      if (obj.userData.link){
+        console.log(obj.userData.link)
+        this.activeLink = obj.userData.link;
+      }
+
+      // finally, if we'd like to reset object parameters after we're  done interacting, 
+      // let's store which object we have interacted with:
+      this.previousIntersects.push(obj);
+    }
+  }
+
+  onMouseMove(event) {
+    // calculate mouse position in normalized device coordinates
+    // (-1 to +1) for both components
+
+    this.mouse.x =
+      (event.clientX / this.renderer.domElement.clientWidth) * 2 - 1;
+    this.mouse.y =
+      -(event.clientY / this.renderer.domElement.clientHeight) * 2 + 1;
+    // console.log(this.mouse);
+  }
+
+  onMouseUp() {
+    console.log('click');
+    if (this.activeLink){
+      window.open(this.activeLink);
+    }
+  }
+
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
   // Rendering 🎥
@@ -222,6 +297,9 @@ class Scene {
     this.frameCount++;
 
     updateEnvironment();
+
+    // we will need to check our raycaster regularly:
+    this.checkRaycaster();
 
     if (this.frameCount % 25 === 0) {
       this.updateClientVolumes();

@@ -9,6 +9,7 @@ function createEnvironment(scene) {
   myMesh = new THREE.Mesh(myGeometry, myMaterial);
   myMesh.position.set(5, 2, 5);
   scene.add(myMesh);
+  myMesh.userData.interactable = true;
 }
 
 
