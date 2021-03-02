@@ -249,7 +249,7 @@ class Scene {
       true
     );
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < intersects.length && i < 1; i++) {
       let obj = intersects[i].object;
 
       // test our raycaster by logging the object the ray has intersected with to the console:
