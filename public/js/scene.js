@@ -16,6 +16,17 @@ class Scene {
     //THREE scene
     this.scene = new THREE.Scene();
     this.keyState = {};
+    this.scene.background = new THREE.CubeTextureLoader()
+	.setPath( '../assets/cubeMap/' )
+	.load( [
+		'px.png',
+		'nx.png',
+		'py.png',
+		'ny.png',
+		'pz.png',
+		'nz.png'
+	] );
+
 
     //Utility
     this.width = window.innerWidth;
@@ -58,7 +69,7 @@ class Scene {
     window.addEventListener("keyup", (e) => this.onKeyUp(e), false);
 
     // Helpers
-    this.scene.add(new THREE.GridHelper(500, 500));
+    // this.scene.add(new THREE.GridHelper(500, 500));
     this.scene.add(new THREE.AxesHelper(10));
 
     this.addLights();
