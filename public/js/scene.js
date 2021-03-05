@@ -58,7 +58,7 @@ class Scene {
     window.addEventListener("keyup", (e) => this.onKeyUp(e), false);
 
     // Helpers
-    this.scene.add(new THREE.GridHelper(500, 500));
+    // this.scene.add(new THREE.GridHelper(500, 500));
     this.scene.add(new THREE.AxesHelper(10));
 
     this.addLights();
