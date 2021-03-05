@@ -34,7 +34,7 @@ function addWater(scene){
     {
       textureWidth: 512,
       textureHeight: 512,
-      waterNormals: new THREE.TextureLoader().load( '../assets/waternormals.jpg', function ( texture ) {
+      waterNormals: new THREE.TextureLoader().load( '../assets/waternormals.jpeg', function ( texture ) {
 
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 
@@ -43,7 +43,7 @@ function addWater(scene){
       sunDirection: new THREE.Vector3(),
       sunColor: 0xffffff,
       waterColor: 0x001e0f,
-      distortionScale: 3.7,
+      distortionScale: 100,
       fog: scene.fog !== undefined
     }
   );
