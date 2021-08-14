@@ -67,6 +67,7 @@ function setupSocketServer() {
     clients[client.id] = {
       position: [0, 0.5, 0],
       rotation: [0, 0, 0, 1], // stored as XYZW values of Quaternion
+      facePredictions: false
     };
 
     // Make sure to send the client their ID and a list of ICE servers for WebRTC network traversal
@@ -142,5 +143,14 @@ function setupSocketServer() {
         candidate: data.candidate,
       });
     });
+
+    client.on("facePredictions", (data) => {
+      // console.log('got face points', data);
+      if (clients[client.id]) {
+        clients[client.id].facePredictions = data;
+      }
+      
+    })
   });
 }
+

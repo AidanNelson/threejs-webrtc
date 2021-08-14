@@ -24,8 +24,8 @@ const { RTCPeerConnection, RTCSessionDescription } = window;
 let iceServerList;
 
 // set video width / height / framerate here:
-const videoWidth = 80;
-const videoHeight = 60;
+const videoWidth = 320;
+const videoHeight = 240;
 const videoFrameRate = 15;
 
 // Our local media stream (i.e. webcam and microphone stream)
@@ -52,6 +52,7 @@ window.onload = async () => {
   localMediaStream = await getMedia(mediaConstraints);
 
   createLocalVideoElement();
+  setupFaceMesh();
 
   // then initialize socket connection
   initSocketConnection();
@@ -87,6 +88,17 @@ function addTracksToPeerConnection(_stream, _pc) {
       _pc.addTrack(track, _stream);
     });
   }
+}
+
+// Facemesh setup (ml5.js):
+let faceLandmarksModel = false;
+
+async function setupFaceMesh() {
+  // Load the MediaPipe Facemesh package.
+  faceLandmarksModel = await faceLandmarksDetection.load(
+    faceLandmarksDetection.SupportedPackages.mediapipeFacemesh,
+    {maxFaces: 1}
+  );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,13 +155,14 @@ function initSocketConnection() {
     if (_id != id) {
       console.log("A user disconnected with the id: " + _id);
       glScene.removeClient(_id);
-	  removeClientVideoElementAndCanvas(_id);
+      removeClientVideoElementAndCanvas(_id);
       delete clients[_id];
     }
   });
 
   // Update when one of the users moves in space
   socket.on("userPositions", (_clientProps) => {
+    // console.log(_clientProps);
     glScene.updateClientPositions(_clientProps);
   });
 
@@ -268,6 +281,10 @@ function createPeerConnection(_id) {
     }
   };
 
+  pc.ondatachannel = (evt) => {
+    console.log(evt);
+  }
+
   addTracksToPeerConnection(localMediaStream, pc);
 
   return pc;
@@ -370,3 +387,5 @@ function removeClientVideoElementAndCanvas(_id) {
     videoEl.remove();
   }
 }
+
+

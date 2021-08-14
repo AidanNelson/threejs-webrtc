@@ -11,7 +11,22 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.1/socket.io.js" integrity="sha512-oFOCo2/3DtjrJG4N27BjSLQWoiBv171sK6a+JiWjp/7agxC2nCUP358AqzxkBUb5jX8g6CYLPdSKQTbC0weCwA==" crossorigin="anonymous"></script>
 
 	<script src="js/libs/three.min.js"></script>
+	<script src="js/libs/convexHull.js"></script>
+	<script src="js/libs/convexGeometry.js"></script>
+	<script src="js/libs/controls.js"></script>
+	
 	<script src="js/libs/playerControls.js"></script>
+	<!-- <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script> -->
+<!-- Require the peer dependencies of face-landmarks-detection. -->
+<script src="https://unpkg.com/@tensorflow/tfjs-core@2.4.0/dist/tf-core.js"></script>
+<script src="https://unpkg.com/@tensorflow/tfjs-converter@2.4.0/dist/tf-converter.js"></script>
+
+<!-- You must explicitly require a TF.js backend if you're not using the tfjs union bundle. -->
+<script src="https://unpkg.com/@tensorflow/tfjs-backend-webgl@2.4.0/dist/tf-backend-webgl.js"></script>
+<!-- Alternatively you can use the WASM backend: <script src="https://unpkg.com/@tensorflow/tfjs-backend-wasm@2.4.0/dist/tf-backend-wasm.js"></script> -->
+
+<!-- Require face-landmarks-detection itself. -->
+<script src="https://unpkg.com/@tensorflow-models/face-landmarks-detection@0.0.1/dist/face-landmarks-detection.js"></script>
 
 	<script src="js/environment.js"></script>
 	<script src="js/scene.js"></script>
@@ -20,11 +35,8 @@
 	<style>
 		body {
 			overflow: hidden;
-		}
-		#info {
-			padding: 1em;
-			border: 1em;
-			color: rgb(223, 223, 223);
+			margin: 0px;
+			padding: 0px;
 		}
 
 	</style>
@@ -36,6 +48,8 @@
 
 	<!-- WebGL context -->
 	<div id="canvas-container"></div>
+	<canvas id="video-canvas" height="256" width="256"></canvas>
+
 
 </body>
 
