@@ -46,8 +46,34 @@ function main() {
 
   setInterval(function() {
     // update all clients of positions
-    io.sockets.emit("userPositions", clients);
+    io.sockets.emit("userPositions", getClientMovementData());
   }, 10);
+
+  setInterval(function() {
+    // update all clients of positions
+    io.sockets.emit("faceData", getClientFaceData());
+  }, 500);
+}
+
+const getClientMovementData = () => {
+    let data = {};
+    for (let id in clients){
+        data[id] = {
+            position: clients[id].position,
+            rotation: clients[id].rotation
+        }
+    }
+    return data;
+}
+
+const getClientFaceData = () => {
+    let data = {};
+    for (let id in clients){
+        data[id] = {
+            facePredictions: clients[id].facePredictions
+        }
+    }
+    return data;
 }
 
 main();

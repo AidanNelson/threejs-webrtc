@@ -166,6 +166,10 @@ function initSocketConnection() {
     glScene.updateClientPositions(_clientProps);
   });
 
+  socket.on("faceData", (data) => {
+    glScene.updateClientFaces(data);
+  })
+
   socket.on("call-made", async (data) => {
     console.log("Receiving call from user " + data.socket);
 
