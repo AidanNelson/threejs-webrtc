@@ -52,7 +52,7 @@ function main() {
   setInterval(function() {
     // update all clients of positions
     io.sockets.emit("faceData", getClientFaceData());
-  }, 500);
+  }, 50);
 }
 
 const getClientMovementData = () => {
