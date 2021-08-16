@@ -572,7 +572,7 @@ class Scene {
 
     faceGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
     // faceGroup.position.set(boxWidth / 2, boxHeight / 2 + this.cameraHeight, 0);
-    faceGroup.position.set(boxWidth / 2, boxHeight / 2 + 0.5, 0);
+    faceGroup.position.set(boxWidth / 2, boxHeight / 2 + 1, 0);
 
     clients[_id].group.add(faceGroup);
     clients[_id].faceMesh = faceMesh;
