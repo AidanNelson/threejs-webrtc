@@ -16,6 +16,9 @@ class Scene {
     this.width = window.innerWidth;
     this.height = window.innerHeight * 0.9;
 
+    // lerp value to be used when interpolating positions and rotations
+    this.lerpValue = 0;
+
     //THREE Camera
     this.camera = new THREE.PerspectiveCamera(
       50,
@@ -89,9 +92,11 @@ class Scene {
     this.scene.add(group);
 
     peers[id].group = group;
+    
+    peers[id].previousPosition = new THREE.Vector3();
+    peers[id].previousRotation = new THREE.Quaternion();
     peers[id].desiredPosition = new THREE.Vector3();
     peers[id].desiredRotation = new THREE.Quaternion();
-    peers[id].movementAlpha = 0;
   }
 
   removeClient(id) {
@@ -100,9 +105,11 @@ class Scene {
 
   // overloaded function can deal with new info or not
   updateClientPositions(clientProperties) {
+    this.lerpValue = 0;
     for (let id in clientProperties) {
-      // we'll update ourselves separately to avoid lag...
       if (id != mySocket.id) {
+        peers[id].previousPosition.copy(peers[id].group.position);
+        peers[id].previousRotation.copy(peers[id].group.quaternion);
         peers[id].desiredPosition = new THREE.Vector3().fromArray(
           clientProperties[id].position
         );
@@ -113,35 +120,12 @@ class Scene {
     }
   }
 
-  // snap to position and rotation if we get close
   interpolatePositions() {
-    let snapDistance = 0.5;
-    let snapAngle = 0.2; // radians
+    this.lerpValue += 0.1; // updates are sent roughly every 1/5 second == 10 frames
     for (let id in peers) {
       if (peers[id].group) {
-        peers[id].group.position.lerp(peers[id].desiredPosition, 0.2);
-        peers[id].group.quaternion.slerp(peers[id].desiredRotation, 0.2);
-        if (
-          peers[id].group.position.distanceTo(peers[id].desiredPosition) <
-          snapDistance
-        ) {
-          peers[id].group.position.set(
-            peers[id].desiredPosition.x,
-            peers[id].desiredPosition.y,
-            peers[id].desiredPosition.z
-          );
-        }
-        if (
-          peers[id].group.quaternion.angleTo(peers[id].desiredRotation) <
-          snapAngle
-        ) {
-          peers[id].group.quaternion.set(
-            peers[id].desiredRotation.x,
-            peers[id].desiredRotation.y,
-            peers[id].desiredRotation.z,
-            peers[id].desiredRotation.w
-          );
-        }
+        peers[id].group.position.lerpVectors(peers[id].previousPosition,peers[id].desiredPosition, this.lerpValue);
+        peers[id].group.quaternion.slerpQuaternions(peers[id].previousRotation,peers[id].desiredRotation, this.lerpValue);
       }
     }
   }

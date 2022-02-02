@@ -58,7 +58,7 @@ window.onload = async () => {
   // start sending position data to the server
   setInterval(function() {
     mySocket.emit("move", myScene.getPlayerPosition());
-  },500);
+  },200);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
