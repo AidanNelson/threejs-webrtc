@@ -20,10 +20,6 @@ let peers = {};
 // Variable to store our three.js scene:
 let glScene;
 
-// WebRTC Variables:
-// const { RTCPeerConnection, RTCSessionDescription } = window;
-// let iceServerList;
-
 // set video width / height / framerate here:
 const videoWidth = 80;
 const videoHeight = 60;
@@ -112,8 +108,13 @@ function initSocketConnection() {
     // for each existing user, add them as a client and add tracks to their peer connection
     for (let i = 0; i < otherClientIds.length; i++) {
       if (otherClientIds[i] != mySocket.id) {
-        addClient(otherClientIds[i], true);
-        // callUser(otherClientIds[i]);
+        let theirId = otherClientIds[i];
+
+        console.log("Adding client with id " + theirId);
+        peers[theirId] = {};
+
+        let pc = createPeerConnection(theirId, true);
+        peers[theirId].peerConnection = pc;
       }
     }
   });
@@ -122,7 +123,9 @@ function initSocketConnection() {
   mySocket.on("newUserConnected", (id) => {
     if (id != mySocket.id && !(id in peers)) {
       console.log("A new user connected with the ID: " + id);
-      addClient(id, false);
+
+      console.log("Adding client with id " + id);
+      peers[id] = {};
     }
   });
 
@@ -138,7 +141,7 @@ function initSocketConnection() {
   });
 
   mySocket.on("signal", (to, from, data) => {
-    console.log("Got a signal from the server: ", to, from, data);
+    // console.log("Got a signal from the server: ", to, from, data);
 
     // to should be us
     if (to != mySocket.id) {
@@ -166,97 +169,28 @@ function initSocketConnection() {
   mySocket.on("positions", (_clientProps) => {
     // glScene.updateClientPositions(_clientProps);
   });
-
-  // mySocket.on("call-made", async (data) => {
-  //   console.log("Receiving call from user " + data.socket);
-
-  //   // set remote session description to incoming offer
-  //   await peers[data.socket].peerConnection.setRemoteDescription(
-  //     new RTCSessionDescription(data.offer)
-  //   );
-
-  //   // create answer and set local session description to that answer
-  //   const answer = await peers[data.socket].peerConnection.createAnswer();
-  //   await peers[data.socket].peerConnection.setLocalDescription(
-  //     new RTCSessionDescription(answer)
-  //   );
-
-  //   // send answer out to caller
-  //   mySocket.emit("make-answer", {
-  //     answer,
-  //     to: data.socket,
-  //   });
-  // });
-
-  // mySocket.on("answer-made", async (data) => {
-  //   console.log("Answer made by " + data.socket);
-
-  //   // set the remote description to be the incoming answer
-  //   await peers[data.socket].peerConnection.setRemoteDescription(
-  //     new RTCSessionDescription(data.answer)
-  //   );
-
-  //   // what is this for?
-  //   if (!peers[data.socket].isAlreadyCalling) {
-  //     callUser(data.socket);
-  //     peers[data.socket].isAlreadyCalling = true;
-  //   }
-  // });
-
-  // mySocket.on("iceCandidateFound", (data) => {
-  //   peers[data.socket].peerConnection.addIceCandidate(data.candidate);
-  // });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Clients / WebRTC
 ////////////////////////////////////////////////////////////////////////////////
 
-// Adds client object with THREE.js object, DOM video object and and an RTC peer connection for each :
-function addClient(_id, isInitiator = false) {
-  console.log("Adding client with id " + _id);
-  peers[_id] = {};
-
-
-
-  // add peerConnection to the client
-  if (isInitiator) {
-    let pc = createPeerConnection(_id, isInitiator);
-    peers[_id].peerConnection = pc;
-  }
-
-
-  // create video element:
-  createClientMediaElements(_id);
-
-  // add client to scene:
-  // glScene.addClient(_id);
-
-}
-
 // this function sets up a peer connection and corresponding DOM elements for a specific client
 function createPeerConnection(theirSocketId, isInitiator = false) {
-  // create a peer connection for  client:
-  // let peerConnectionConfiguration;
-  // if (false) {
-  // peerConnectionConfiguration = { iceServers: iceServerList };
-  // } else {
-  // peerConnectionConfiguration = {}; // this should work locally
-  // }
   console.log('Connecting to peer with ID', theirSocketId);
   console.log('initiating?', isInitiator);
 
   let peerConnection = new SimplePeer({ initiator: isInitiator })
   // simplepeer generates signals which need to be sent across socket
   peerConnection.on("signal", (data) => {
-    console.log('signal');
+    // console.log('signal');
     mySocket.emit("signal", theirSocketId, mySocket.id, data);
   });
 
   // When we have a connection, send our stream
   peerConnection.on("connect", () => {
-    console.log("Connected with peer:");
-    console.log(peerConnection);
+    // console.log("Connected with peer:");
+    // console.log(peerConnection);
 
     // Let's give them our stream
     peerConnection.addStream(localMediaStream);
@@ -267,17 +201,7 @@ function createPeerConnection(theirSocketId, isInitiator = false) {
   peerConnection.on("stream", (stream) => {
     console.log("Incoming Stream");
 
-    // This should really be a callback
-    // Create a video object
-    let theirVideoEl = document.createElement("VIDEO");
-    theirVideoEl.id = theirSocketId;
-    theirVideoEl.srcObject = stream;
-    theirVideoEl.muted = true;
-    theirVideoEl.onloadedmetadata = function (e) {
-      theirVideoEl.play();
-    };
-    document.body.appendChild(theirVideoEl);
-    console.log(theirVideoEl);
+    createClientMediaElements(theirSocketId, stream);
   });
 
   peerConnection.on("close", () => {
@@ -290,69 +214,7 @@ function createPeerConnection(theirSocketId, isInitiator = false) {
   });
 
   return peerConnection;
-  // let pc = new RTCPeerConnection(peerConnectionConfiguration);
-
-  // add ontrack listener for peer connection
-  // pc.ontrack = function ({ streams: [_remoteStream] }) {
-  //   console.log("OnTrack: track added to RTC Peer Connection.");
-  //   console.log(_remoteStream);
-  //   // Split incoming stream into two streams: audio for THREE.PositionalAudio and
-  //   // video for <video> element --> <canvas> --> videoTexture --> videoMaterial for THREE.js
-  //   // https://stackoverflow.com/questions/50984531/threejs-positional-audio-with-webrtc-streams-produces-no-sound
-
-  //   let videoStream = new MediaStream([_remoteStream.getVideoTracks()[0]]);
-  //   let audioStream = new MediaStream([_remoteStream.getAudioTracks()[0]]);
-
-  //   // get access to the audio element:
-  //   let audioEl = document.getElementById(_id + "_audio");
-  //   if (audioEl) {
-  //     audioEl.srcObject = audioStream;
-  //   }
-  //   // audio element should start playing as soon as data is loaded
-
-  //   const remoteVideoElement = document.getElementById(_id + "_video");
-  //   if (remoteVideoElement) {
-  //     remoteVideoElement.srcObject = videoStream;
-  //   } else {
-  //     console.warn("No video element found for ID: " + _id);
-  //   }
-  // };
-
-  // https://www.twilio.com/docs/stun-turn
-  // Here's an example in javascript
-  // pc.onicecandidate = function (evt) {
-  //   if (evt.candidate) {
-  //     console.log("OnICECandidate: Forwarding ICE candidate to peer.");
-  //     // send the candidate to the other party via your signaling channel
-  //     socket.emit("addIceCandidate", {
-  //       candidate: evt.candidate,
-  //       to: _id,
-  //     });
-  //   }
-  // };
-
-  // addTracksToPeerConnection(localMediaStream, pc);
-
-  // return pc;
 }
-
-// async function callUser(id) {
-//   if (clients.hasOwnProperty(id)) {
-//     console.log("Calling user " + id);
-
-//     // https://blog.carbonfive.com/2014/10/16/webrtc-made-simple/
-//     // create offer with session description
-//     const offer = await clients[id].peerConnection.createOffer();
-//     await clients[id].peerConnection.setLocalDescription(
-//       new RTCSessionDescription(offer)
-//     );
-
-//     mySocket.emit("call-user", {
-//       offer,
-//       to: id,
-//     });
-//   }
-// }
 
 // temporarily pause the outgoing stream
 function disableOutgoingStream() {
@@ -399,16 +261,21 @@ function createLocalVideoElement() {
 }
 
 // created <video> element using client ID
-function createClientMediaElements(_id) {
+function createClientMediaElements(_id, stream) {
+
+  let videoStream = new MediaStream([stream.getVideoTracks()[0]]);
+  let audioStream = new MediaStream([stream.getAudioTracks()[0]]);
+
   console.log("Creating <video> element for client with id: " + _id);
 
   const videoElement = document.createElement("video");
   videoElement.id = _id + "_video";
-  videoElement.width = videoWidth;
-  videoElement.height = videoHeight;
+  // videoElement.width = videoWidth;
+  // videoElement.height = videoHeight;
   videoElement.autoplay = true;
   // videoElement.muted = true; // TODO Positional Audio
   // videoElement.style = "visibility: hidden;";
+  videoElement.srcObject = videoStream;
 
   document.body.appendChild(videoElement);
 
@@ -422,6 +289,8 @@ function createClientMediaElements(_id) {
   audioEl.addEventListener("loadeddata", () => {
     audioEl.play();
   });
+  
+  audioEl.srcObject = audioStream;
 }
 
 // remove <video> element and corresponding <canvas> using client ID
