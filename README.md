@@ -26,6 +26,7 @@ This space is built using a number of technologies, including:
 * [three.js](https://threejs.org/) provides rendering / 3D environment interaction
 * [socket.io](https://socket.io/) provides the three.js multiplayer functionality, and acts as a WebRTC signaling server
 * [WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API) provides video / audio chat functionality
+* [Simple Peer](https://github.com/feross/simple-peer) provides a friendlier API for WebRTC
 
 ## Credits:
 

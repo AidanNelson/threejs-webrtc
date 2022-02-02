@@ -16,7 +16,7 @@ let mySocket;
 let peers = {};
 
 // Variable to store our three.js scene:
-let glScene;
+let myScene;
 
 // set video width / height / framerate here:
 const videoWidth = 80;
@@ -53,7 +53,12 @@ window.onload = async () => {
 
   // finally create the threejs scene
   console.log("Creating three.js scene...");
-  glScene = new Scene(onPlayerMove);
+  myScene = new Scene();
+
+  // start sending position data to the server
+  setInterval(function() {
+    mySocket.emit("move", myScene.getPlayerPosition());
+  },200);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +108,7 @@ function initSocketConnection() {
 
         createClientMediaElements(theirId);
 
-        glScene.addClient(theirId);
+        myScene.addClient(theirId);
 
       }
     }
@@ -119,7 +124,7 @@ function initSocketConnection() {
 
       createClientMediaElements(theirId);
 
-      glScene.addClient(theirId);
+      myScene.addClient(theirId);
     }
   });
 
@@ -128,7 +133,7 @@ function initSocketConnection() {
 
     if (_id != mySocket.id) {
       console.log("A user disconnected with the id: " + _id);
-      glScene.removeClient(_id);
+      myScene.removeClient(_id);
       removeClientVideoElementAndCanvas(_id);
       delete peers[_id];
     }
@@ -161,7 +166,7 @@ function initSocketConnection() {
 
   // Update when one of the users moves in space
   mySocket.on("positions", (_clientProps) => {
-    glScene.updateClientPositions(_clientProps);
+    myScene.updateClientPositions(_clientProps);
   });
 }
 
@@ -226,7 +231,7 @@ function enableOutgoingStream() {
 
 function onPlayerMove() {
   // console.log('Sending movement update to server.');
-  mySocket.emit("move", glScene.getPlayerPosition());
+  
 }
 
 //////////////////////////////////////////////////////////////////////

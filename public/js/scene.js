@@ -2,27 +2,22 @@
  *
  * This uses code from a THREE.js Multiplayer boilerplate made by Or Fleisher:
  * https://github.com/juniorxsound/THREE.Multiplayer
- * And a WEBRTC chat app made by Mikołaj Wargowski:
- * https://github.com/Miczeq22/simple-chat-app
- *
  * Aidan Nelson, April 2020
  *
  */
 
-class Scene {
-  constructor(_movementCallback) {
-    this.movementCallback = _movementCallback;
 
+class Scene {
+  constructor() {
     //THREE scene
     this.scene = new THREE.Scene();
-    this.keyState = {};
 
     //Utility
     this.width = window.innerWidth;
-    this.height = window.innerHeight - 100;
+    this.height = window.innerHeight * 0.9;
 
-    //Add Player
-    this.addSelf();
+    // lerp value to be used when interpolating positions and rotations
+    this.lerpValue = 0;
 
     //THREE Camera
     this.camera = new THREE.PerspectiveCamera(
@@ -36,7 +31,7 @@ class Scene {
 
     // create an AudioListener and add it to the camera
     this.listener = new THREE.AudioListener();
-    this.playerGroup.add(this.listener);
+    this.camera.add(this.listener);
 
     //THREE WebGL renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -46,7 +41,7 @@ class Scene {
     this.renderer.setSize(this.width, this.height);
 
     // add controls:
-    this.controls = new THREE.PlayerControls(this.camera, this.playerGroup);
+    this.controls = new FirstPersonControls(this.scene, this.camera, this.renderer);
 
     //Push the canvas to the DOM
     let domElement = document.getElementById("canvas-container");
@@ -54,8 +49,6 @@ class Scene {
 
     //Setup event listeners for events and handle the states
     window.addEventListener("resize", (e) => this.onWindowResize(e), false);
-    window.addEventListener("keydown", (e) => this.onKeyDown(e), false);
-    window.addEventListener("keyup", (e) => this.onKeyUp(e), false);
 
     // Helpers
     this.scene.add(new THREE.GridHelper(500, 500));
@@ -81,114 +74,76 @@ class Scene {
   //////////////////////////////////////////////////////////////////////
   // Clients 👫
 
-  addSelf() {
-    let videoMaterial = makeVideoMaterial("local");
-
-    let _head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), videoMaterial);
-
-    _head.position.set(0, 0, 0);
-
-    // https://threejs.org/docs/index.html#api/en/objects/Group
-    this.playerGroup = new THREE.Group();
-    this.playerGroup.position.set(0, 0.5, 0);
-    this.playerGroup.add(_head);
-
-    // add group to scene
-    this.scene.add(this.playerGroup);
-  }
-
   // add a client meshes, a video element and  canvas for three.js video texture
-  addClient(_id) {
-    let videoMaterial = makeVideoMaterial(_id);
+  addClient(id) {
+    let videoMaterial = makeVideoMaterial(id);
+    let otherMat = new THREE.MeshNormalMaterial();
 
-    let _head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), videoMaterial);
+    let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
 
     // set position of head before adding to parent object
-
-    _head.position.set(0, 0, 0);
+    head.position.set(0, 0, 0);
 
     // https://threejs.org/docs/index.html#api/en/objects/Group
     var group = new THREE.Group();
-    group.add(_head);
+    group.add(head);
 
     // add group to scene
     this.scene.add(group);
 
-    peers[_id].group = group;
-    peers[_id].head = _head;
-    peers[_id].desiredPosition = new THREE.Vector3();
-    peers[_id].desiredRotation = new THREE.Quaternion();
-    peers[_id].movementAlpha = 0;
+    peers[id].group = group;
+    
+    peers[id].previousPosition = new THREE.Vector3();
+    peers[id].previousRotation = new THREE.Quaternion();
+    peers[id].desiredPosition = new THREE.Vector3();
+    peers[id].desiredRotation = new THREE.Quaternion();
   }
 
-  removeClient(_id) {
-    this.scene.remove(peers[_id].group);
+  removeClient(id) {
+    this.scene.remove(peers[id].group);
   }
 
   // overloaded function can deal with new info or not
-  updateClientPositions(_clientProps) {
-    for (let _id in _clientProps) {
-      // we'll update ourselves separately to avoid lag...
-      if (_id != mySocket.id) {
-        peers[_id].desiredPosition = new THREE.Vector3().fromArray(
-          _clientProps[_id].position
+  updateClientPositions(clientProperties) {
+    this.lerpValue = 0;
+    for (let id in clientProperties) {
+      if (id != mySocket.id) {
+        peers[id].previousPosition.copy(peers[id].group.position);
+        peers[id].previousRotation.copy(peers[id].group.quaternion);
+        peers[id].desiredPosition = new THREE.Vector3().fromArray(
+          clientProperties[id].position
         );
-        peers[_id].desiredRotation = new THREE.Quaternion().fromArray(
-          _clientProps[_id].rotation
+        peers[id].desiredRotation = new THREE.Quaternion().fromArray(
+          clientProperties[id].rotation
         );
       }
     }
   }
 
-  // snap to position and rotation if we get close
   interpolatePositions() {
-    let snapDistance = 0.5;
-    let snapAngle = 0.2; // radians
-    for (let _id in peers) {
-      if (peers[_id].group) {
-        peers[_id].group.position.lerp(peers[_id].desiredPosition, 0.2);
-        peers[_id].group.quaternion.slerp(peers[_id].desiredRotation, 0.2);
-        if (
-          peers[_id].group.position.distanceTo(peers[_id].desiredPosition) <
-          snapDistance
-        ) {
-          peers[_id].group.position.set(
-            peers[_id].desiredPosition.x,
-            peers[_id].desiredPosition.y,
-            peers[_id].desiredPosition.z
-          );
-        }
-        if (
-          peers[_id].group.quaternion.angleTo(peers[_id].desiredRotation) <
-          snapAngle
-        ) {
-          peers[_id].group.quaternion.set(
-            peers[_id].desiredRotation.x,
-            peers[_id].desiredRotation.y,
-            peers[_id].desiredRotation.z,
-            peers[_id].desiredRotation.w
-          );
-        }
+    this.lerpValue += 0.1; // updates are sent roughly every 1/5 second == 10 frames
+    for (let id in peers) {
+      if (peers[id].group) {
+        peers[id].group.position.lerpVectors(peers[id].previousPosition,peers[id].desiredPosition, this.lerpValue);
+        peers[id].group.quaternion.slerpQuaternions(peers[id].previousRotation,peers[id].desiredRotation, this.lerpValue);
       }
     }
   }
 
   updateClientVolumes() {
-    for (let _id in peers) {
-      let audioEl = document.getElementById(_id + "_audio");
-      if (audioEl && peers[_id].group) {
+    for (let id in peers) {
+      let audioEl = document.getElementById(id + "_audio");
+      if (audioEl && peers[id].group) {
         let distSquared = this.camera.position.distanceToSquared(
-          peers[_id].group.position
+          peers[id].group.position
         );
 
         if (distSquared > 500) {
-          // console.log('setting vol to 0')
           audioEl.volume = 0;
         } else {
           // from lucasio here: https://discourse.threejs.org/t/positionalaudio-setmediastreamsource-with-webrtc-question-not-hearing-any-sound/14301/29
           let volume = Math.min(1, 10 / distSquared);
           audioEl.volume = volume;
-          // console.log('setting vol to',volume)
         }
       }
     }
@@ -202,15 +157,15 @@ class Scene {
     // TODO: use quaternion or are euler angles fine here?
     return [
       [
-        this.playerGroup.position.x,
-        this.playerGroup.position.y,
-        this.playerGroup.position.z,
+        this.camera.position.x,
+        this.camera.position.y,
+        this.camera.position.z,
       ],
       [
-        this.playerGroup.quaternion._x,
-        this.playerGroup.quaternion._y,
-        this.playerGroup.quaternion._z,
-        this.playerGroup.quaternion._w,
+        this.camera.quaternion._x,
+        this.camera.quaternion._y,
+        this.camera.quaternion._z,
+        this.camera.quaternion._w,
       ],
     ];
   }
@@ -227,7 +182,6 @@ class Scene {
 
     if (this.frameCount % 25 === 0) {
       this.updateClientVolumes();
-      this.movementCallback();
     }
 
     this.interpolatePositions();
@@ -245,21 +199,10 @@ class Scene {
 
   onWindowResize(e) {
     this.width = window.innerWidth;
-    this.height = Math.floor(window.innerHeight - window.innerHeight * 0.3);
+    this.height = Math.floor(window.innerHeight * 0.9);
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(this.width, this.height);
-  }
-
-  // keystate functions from playercontrols
-  onKeyDown(event) {
-    event = event || window.event;
-    this.keyState[event.keyCode || event.which] = true;
-  }
-
-  onKeyUp(event) {
-    event = event || window.event;
-    this.keyState[event.keyCode || event.which] = false;
   }
 }
 
@@ -267,8 +210,8 @@ class Scene {
 //////////////////////////////////////////////////////////////////////
 // Utilities
 
-function makeVideoMaterial(_id) {
-  let videoElement = document.getElementById(_id + "_video");
+function makeVideoMaterial(id) {
+  let videoElement = document.getElementById(id + "_video");
   let videoTexture = new THREE.VideoTexture(videoElement);
 
   let videoMaterial = new THREE.MeshBasicMaterial({
