@@ -145,28 +145,30 @@ class Scene {
     let snapDistance = 0.5;
     let snapAngle = 0.2; // radians
     for (let _id in peers) {
-      peers[_id].group.position.lerp(peers[_id].desiredPosition, 0.2);
-      peers[_id].group.quaternion.slerp(peers[_id].desiredRotation, 0.2);
-      if (
-        peers[_id].group.position.distanceTo(peers[_id].desiredPosition) <
-        snapDistance
-      ) {
-        peers[_id].group.position.set(
-          peers[_id].desiredPosition.x,
-          peers[_id].desiredPosition.y,
-          peers[_id].desiredPosition.z
-        );
-      }
-      if (
-        peers[_id].group.quaternion.angleTo(peers[_id].desiredRotation) <
-        snapAngle
-      ) {
-        peers[_id].group.quaternion.set(
-          peers[_id].desiredRotation.x,
-          peers[_id].desiredRotation.y,
-          peers[_id].desiredRotation.z,
-          peers[_id].desiredRotation.w
-        );
+      if (peers[_id].group) {
+        peers[_id].group.position.lerp(peers[_id].desiredPosition, 0.2);
+        peers[_id].group.quaternion.slerp(peers[_id].desiredRotation, 0.2);
+        if (
+          peers[_id].group.position.distanceTo(peers[_id].desiredPosition) <
+          snapDistance
+        ) {
+          peers[_id].group.position.set(
+            peers[_id].desiredPosition.x,
+            peers[_id].desiredPosition.y,
+            peers[_id].desiredPosition.z
+          );
+        }
+        if (
+          peers[_id].group.quaternion.angleTo(peers[_id].desiredRotation) <
+          snapAngle
+        ) {
+          peers[_id].group.quaternion.set(
+            peers[_id].desiredRotation.x,
+            peers[_id].desiredRotation.y,
+            peers[_id].desiredRotation.z,
+            peers[_id].desiredRotation.w
+          );
+        }
       }
     }
   }
@@ -174,7 +176,7 @@ class Scene {
   updateClientVolumes() {
     for (let _id in peers) {
       let audioEl = document.getElementById(_id + "_audio");
-      if (audioEl) {
+      if (audioEl && peers[_id].group) {
         let distSquared = this.camera.position.distanceToSquared(
           peers[_id].group.position
         );

@@ -9,8 +9,6 @@
  *
  */
 
-// const SimplePeer = require("simple-peer");
-
 // socket.io
 let mySocket;
 
@@ -55,7 +53,7 @@ window.onload = async () => {
 
   // finally create the threejs scene
   console.log("Creating three.js scene...");
-  // glScene = new Scene(onPlayerMove);
+  glScene = new Scene(onPlayerMove);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,16 +72,6 @@ async function getMedia(_mediaConstraints) {
   }
 
   return stream;
-}
-
-function addTracksToPeerConnection(_stream, _pc) {
-  if (_stream == null) {
-    console.log("Local User media stream not yet established!");
-  } else {
-    _stream.getTracks().forEach((track) => {
-      _pc.addTrack(track, _stream);
-    });
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,17 +100,26 @@ function initSocketConnection() {
 
         let pc = createPeerConnection(theirId, true);
         peers[theirId].peerConnection = pc;
+
+        createClientMediaElements(theirId);
+
+        glScene.addClient(theirId);
+
       }
     }
   });
 
   // when a new user has entered the server
-  mySocket.on("newUserConnected", (id) => {
-    if (id != mySocket.id && !(id in peers)) {
-      console.log("A new user connected with the ID: " + id);
+  mySocket.on("newUserConnected", (theirId) => {
+    if (theirId != mySocket.id && !(theirId in peers)) {
+      console.log("A new user connected with the ID: " + theirId);
 
-      console.log("Adding client with id " + id);
-      peers[id] = {};
+      console.log("Adding client with id " + theirId);
+      peers[theirId] = {};
+
+      createClientMediaElements(theirId);
+
+      glScene.addClient(theirId);
     }
   });
 
@@ -131,7 +128,7 @@ function initSocketConnection() {
 
     if (_id != mySocket.id) {
       console.log("A user disconnected with the id: " + _id);
-      // glScene.removeClient(_id);
+      glScene.removeClient(_id);
       removeClientVideoElementAndCanvas(_id);
       delete peers[_id];
     }
@@ -164,7 +161,7 @@ function initSocketConnection() {
 
   // Update when one of the users moves in space
   mySocket.on("positions", (_clientProps) => {
-    // glScene.updateClientPositions(_clientProps);
+    glScene.updateClientPositions(_clientProps);
   });
 }
 
@@ -186,9 +183,6 @@ function createPeerConnection(theirSocketId, isInitiator = false) {
 
   // When we have a connection, send our stream
   peerConnection.on("connect", () => {
-    // console.log("Connected with peer:");
-    // console.log(peerConnection);
-
     // Let's give them our stream
     peerConnection.addStream(localMediaStream);
     console.log("Send our stream");
@@ -198,7 +192,7 @@ function createPeerConnection(theirSocketId, isInitiator = false) {
   peerConnection.on("stream", (stream) => {
     console.log("Incoming Stream");
 
-    createClientMediaElements(theirSocketId, stream);
+    updateClientMediaElements(theirSocketId, stream);
   });
 
   peerConnection.on("close", () => {
@@ -248,9 +242,6 @@ function createLocalVideoElement() {
   videoElement.height = videoHeight;
   // videoElement.style = "visibility: hidden;";
 
-  // there seems to be a weird behavior where a muted video
-  // won't autoplay in chrome...  so instead of muting the video, simply make a
-  // video only stream for this video element :|
   let videoStream = new MediaStream([localMediaStream.getVideoTracks()[0]]);
 
   videoElement.srcObject = videoStream;
@@ -258,21 +249,13 @@ function createLocalVideoElement() {
 }
 
 // created <video> element using client ID
-function createClientMediaElements(_id, stream) {
-
-  let videoStream = new MediaStream([stream.getVideoTracks()[0]]);
-  let audioStream = new MediaStream([stream.getAudioTracks()[0]]);
-
-  console.log("Creating <video> element for client with id: " + _id);
+function createClientMediaElements(_id) {
+  console.log("Creating <html> media elements for client with ID: " + _id);
 
   const videoElement = document.createElement("video");
   videoElement.id = _id + "_video";
-  // videoElement.width = videoWidth;
-  // videoElement.height = videoHeight;
   videoElement.autoplay = true;
-  // videoElement.muted = true; // TODO Positional Audio
   // videoElement.style = "visibility: hidden;";
-  videoElement.srcObject = videoStream;
 
   document.body.appendChild(videoElement);
 
@@ -286,7 +269,17 @@ function createClientMediaElements(_id, stream) {
   audioEl.addEventListener("loadeddata", () => {
     audioEl.play();
   });
-  
+}
+
+function updateClientMediaElements(_id, stream) {
+
+  let videoStream = new MediaStream([stream.getVideoTracks()[0]]);
+  let audioStream = new MediaStream([stream.getAudioTracks()[0]]);
+
+  const videoElement = document.getElementById(_id + "_video");
+  videoElement.srcObject = videoStream;
+
+  let audioEl = document.getElementById(_id + "_audio");
   audioEl.srcObject = audioStream;
 }
 
