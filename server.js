@@ -28,25 +28,15 @@ console.log("Server is running on http://localhost:" + port);
 /////SOCKET.IO///////
 const io = require("socket.io")().listen(server);
 
-// Network Traversal
-// Could also use network traversal service here (Twilio, for example):
-let iceServers = [
-  { url: "stun:stun.l.google.com:19302" },
-  { url: "stun:stun1.l.google.com:19302" },
-  { url: "stun:stun2.l.google.com:19302" },
-  { url: "stun:stun3.l.google.com:19302" },
-  { url: "stun:stun4.l.google.com:19302" },
-];
-
 // an object where we will store innformation about active clients
-let clients = {};
+let peers = {};
 
 function main() {
   setupSocketServer();
 
-  setInterval(function() {
+  setInterval(function () {
     // update all clients of positions
-    io.sockets.emit("userPositions", clients);
+    io.sockets.emit("positions", peers);
   }, 10);
 }
 
@@ -54,93 +44,70 @@ main();
 
 function setupSocketServer() {
   // Set up each socket connection
-  io.on("connection", (client) => {
+  io.on("connection", (socket) => {
     console.log(
-      "User " +
-        client.id +
-        " connected, there are " +
-        io.engine.clientsCount +
-        " clients connected"
+      "Peer joined with ID",
+      socket.id,
+      ". There are " +
+      io.engine.clientsCount +
+      " peer(s) connected."
     );
 
     //Add a new client indexed by their socket id
-    clients[client.id] = {
+    peers[socket.id] = {
       position: [0, 0.5, 0],
       rotation: [0, 0, 0, 1], // stored as XYZW values of Quaternion
     };
 
     // Make sure to send the client their ID and a list of ICE servers for WebRTC network traversal
-    client.emit(
+    socket.emit(
       "introduction",
-      client.id,
-      io.engine.clientsCount,
-      Object.keys(clients),
-      iceServers
+      Object.keys(peers)
     );
 
     // also give the client all existing clients positions:
-    client.emit("userPositions", clients);
+    socket.emit("userPositions", peers);
 
     //Update everyone that the number of users has changed
-    io.sockets.emit(
+    io.emit(
       "newUserConnected",
-      io.engine.clientsCount,
-      client.id,
-      Object.keys(clients)
+      socket.id
     );
 
     // whenever the client moves, update their movements in the clients object
-    client.on("move", (data) => {
-      if (clients[client.id]) {
-        clients[client.id].position = data[0];
-        clients[client.id].rotation = data[1];
+    socket.on("move", (data) => {
+      if (peers[socket.id]) {
+        peers[socket.id].position = data[0];
+        peers[socket.id].rotation = data[1];
+      }
+    });
+
+    // Relay simple-peer signals back and forth
+    socket.on("signal", (to, from, data) => {
+      if (to in peers) {
+        io.to(to).emit("signal", to, from, data);
+      } else {
+        console.log("Peer not found!");
       }
     });
 
     //Handle the disconnection
-    client.on("disconnect", () => {
+    socket.on("disconnect", () => {
       //Delete this client from the object
-      delete clients[client.id];
+      delete peers[socket.id];
       io.sockets.emit(
         "userDisconnected",
         io.engine.clientsCount,
-        client.id,
-        Object.keys(clients)
+        socket.id,
+        Object.keys(peers)
       );
       console.log(
         "User " +
-          client.id +
-          " diconnected, there are " +
-          io.engine.clientsCount +
-          " clients connected"
+        socket.id +
+        " diconnected, there are " +
+        io.engine.clientsCount +
+        " clients connected"
       );
-    });
-
-    // from simple chat app:
-    // WEBRTC Communications
-    client.on("call-user", (data) => {
-      console.log(
-        "Server forwarding call from " + client.id + " to " + data.to
-      );
-      client.to(data.to).emit("call-made", {
-        offer: data.offer,
-        socket: client.id,
-      });
-    });
-
-    client.on("make-answer", (data) => {
-      client.to(data.to).emit("answer-made", {
-        socket: client.id,
-        answer: data.answer,
-      });
-    });
-
-    // ICE Setup
-    client.on("addIceCandidate", (data) => {
-      client.to(data.to).emit("iceCandidateFound", {
-        socket: client.id,
-        candidate: data.candidate,
-      });
     });
   });
 }

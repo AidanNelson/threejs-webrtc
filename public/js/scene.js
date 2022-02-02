@@ -114,26 +114,26 @@ class Scene {
     // add group to scene
     this.scene.add(group);
 
-    clients[_id].group = group;
-    clients[_id].head = _head;
-    clients[_id].desiredPosition = new THREE.Vector3();
-    clients[_id].desiredRotation = new THREE.Quaternion();
-    clients[_id].movementAlpha = 0;
+    peers[_id].group = group;
+    peers[_id].head = _head;
+    peers[_id].desiredPosition = new THREE.Vector3();
+    peers[_id].desiredRotation = new THREE.Quaternion();
+    peers[_id].movementAlpha = 0;
   }
 
   removeClient(_id) {
-    this.scene.remove(clients[_id].group);
+    this.scene.remove(peers[_id].group);
   }
 
   // overloaded function can deal with new info or not
   updateClientPositions(_clientProps) {
     for (let _id in _clientProps) {
       // we'll update ourselves separately to avoid lag...
-      if (_id != id) {
-        clients[_id].desiredPosition = new THREE.Vector3().fromArray(
+      if (_id != mySocket.id) {
+        peers[_id].desiredPosition = new THREE.Vector3().fromArray(
           _clientProps[_id].position
         );
-        clients[_id].desiredRotation = new THREE.Quaternion().fromArray(
+        peers[_id].desiredRotation = new THREE.Quaternion().fromArray(
           _clientProps[_id].rotation
         );
       }
@@ -144,39 +144,41 @@ class Scene {
   interpolatePositions() {
     let snapDistance = 0.5;
     let snapAngle = 0.2; // radians
-    for (let _id in clients) {
-      clients[_id].group.position.lerp(clients[_id].desiredPosition, 0.2);
-      clients[_id].group.quaternion.slerp(clients[_id].desiredRotation, 0.2);
-      if (
-        clients[_id].group.position.distanceTo(clients[_id].desiredPosition) <
-        snapDistance
-      ) {
-        clients[_id].group.position.set(
-          clients[_id].desiredPosition.x,
-          clients[_id].desiredPosition.y,
-          clients[_id].desiredPosition.z
-        );
-      }
-      if (
-        clients[_id].group.quaternion.angleTo(clients[_id].desiredRotation) <
-        snapAngle
-      ) {
-        clients[_id].group.quaternion.set(
-          clients[_id].desiredRotation.x,
-          clients[_id].desiredRotation.y,
-          clients[_id].desiredRotation.z,
-          clients[_id].desiredRotation.w
-        );
+    for (let _id in peers) {
+      if (peers[_id].group) {
+        peers[_id].group.position.lerp(peers[_id].desiredPosition, 0.2);
+        peers[_id].group.quaternion.slerp(peers[_id].desiredRotation, 0.2);
+        if (
+          peers[_id].group.position.distanceTo(peers[_id].desiredPosition) <
+          snapDistance
+        ) {
+          peers[_id].group.position.set(
+            peers[_id].desiredPosition.x,
+            peers[_id].desiredPosition.y,
+            peers[_id].desiredPosition.z
+          );
+        }
+        if (
+          peers[_id].group.quaternion.angleTo(peers[_id].desiredRotation) <
+          snapAngle
+        ) {
+          peers[_id].group.quaternion.set(
+            peers[_id].desiredRotation.x,
+            peers[_id].desiredRotation.y,
+            peers[_id].desiredRotation.z,
+            peers[_id].desiredRotation.w
+          );
+        }
       }
     }
   }
 
   updateClientVolumes() {
-    for (let _id in clients) {
+    for (let _id in peers) {
       let audioEl = document.getElementById(_id + "_audio");
-      if (audioEl) {
+      if (audioEl && peers[_id].group) {
         let distSquared = this.camera.position.distanceToSquared(
-          clients[_id].group.position
+          peers[_id].group.position
         );
 
         if (distSquared > 500) {
