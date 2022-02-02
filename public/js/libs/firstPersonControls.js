@@ -27,7 +27,7 @@ class FirstPersonControls {
         this.lon = 180
         this.lat = 0
         this.phi = 0
-        this.theta = 0
+        this.theta = 0;
         this.isUserInteracting = false
         this.camera.target = new THREE.Vector3(0, 0, 0)
 

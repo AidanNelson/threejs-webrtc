@@ -2,9 +2,6 @@
  *
  * This uses code from a THREE.js Multiplayer boilerplate made by Or Fleisher:
  * https://github.com/juniorxsound/THREE.Multiplayer
- * And a WEBRTC chat app made by Mikołaj Wargowski:
- * https://github.com/Miczeq22/simple-chat-app
- *
  * Aidan Nelson, April 2020
  *
  */
