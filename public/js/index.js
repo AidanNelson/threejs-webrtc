@@ -100,10 +100,7 @@ function initSocketConnection() {
   });
 
   //On connection server sends the client his ID and a list of all keys
-  mySocket.on("introduction", (otherClientIds, iceServers) => {
-    // keep local copy of ice servers:
-    console.log("Received ICE server credentials from server.");
-    iceServerList = iceServers;
+  mySocket.on("introduction", (otherClientIds) => {
 
     // for each existing user, add them as a client and add tracks to their peer connection
     for (let i = 0; i < otherClientIds.length; i++) {
