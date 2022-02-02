@@ -28,16 +28,6 @@ console.log("Server is running on http://localhost:" + port);
 /////SOCKET.IO///////
 const io = require("socket.io")().listen(server);
 
-// Network Traversal
-// Could also use network traversal service here (Twilio, for example):
-let iceServers = [
-  { url: "stun:stun.l.google.com:19302" },
-  { url: "stun:stun1.l.google.com:19302" },
-  { url: "stun:stun2.l.google.com:19302" },
-  { url: "stun:stun3.l.google.com:19302" },
-  { url: "stun:stun4.l.google.com:19302" },
-];
-
 // an object where we will store innformation about active clients
 let peers = {};
 
@@ -72,8 +62,7 @@ function setupSocketServer() {
     // Make sure to send the client their ID and a list of ICE servers for WebRTC network traversal
     socket.emit(
       "introduction",
-      Object.keys(peers),
-      iceServers
+      Object.keys(peers)
     );
 
     // also give the client all existing clients positions:
@@ -95,12 +84,8 @@ function setupSocketServer() {
 
     // Relay simple-peer signals back and forth
     socket.on("signal", (to, from, data) => {
-      console.log("signal");
-
       if (to in peers) {
-        // console.log(peers[to])
         io.to(to).emit("signal", to, from, data);
-        // peers[to].socket.emit("signal", to, from, data);
       } else {
         console.log("Peer not found!");
       }
@@ -124,32 +109,5 @@ function setupSocketServer() {
         " clients connected"
       );
     });
-
-    // from simple chat app:
-    // WEBRTC Communications
-    // client.on("call-user", (data) => {
-    //   console.log(
-    //     "Server forwarding call from " + client.id + " to " + data.to
-    //   );
-    //   client.to(data.to).emit("call-made", {
-    //     offer: data.offer,
-    //     socket: client.id,
-    //   });
-    // });
-
-    // client.on("make-answer", (data) => {
-    //   client.to(data.to).emit("answer-made", {
-    //     socket: client.id,
-    //     answer: data.answer,
-    //   });
-    // });
-
-    // // ICE Setup
-    // client.on("addIceCandidate", (data) => {
-    //   client.to(data.to).emit("iceCandidateFound", {
-    //     socket: client.id,
-    //     candidate: data.candidate,
-    //   });
-    // });
   });
 }
