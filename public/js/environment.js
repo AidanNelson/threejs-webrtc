@@ -13,5 +13,5 @@ function createEnvironment(scene) {
 
 
 function updateEnvironment(scene) {
-  // myMesh.position.x += 0.01;
+  myMesh.position.x += 0.01;
 }
