@@ -6,7 +6,6 @@
  *
  */
 
-
 class Scene {
   constructor() {
     //THREE scene
@@ -40,8 +39,10 @@ class Scene {
     this.renderer.setClearColor(new THREE.Color("lightblue"));
     this.renderer.setSize(this.width, this.height);
 
+    this.addMyself();
     // add controls:
-    this.controls = new FirstPersonControls(this.scene, this.camera, this.renderer);
+    this.controls = new MyControls(this.camera);
+    // this.controls = new FirstPersonControls(this.scene, this.camera, this.renderer);
 
     //Push the canvas to the DOM
     let domElement = document.getElementById("canvas-container");
@@ -67,19 +68,34 @@ class Scene {
   // Lighting 💡
 
   addLights() {
-    this.scene.add(new THREE.AmbientLight(0xffffe6, 0.7));
+    this.scene.add(new THREE.AmbientLight(0xffffe6, 0.9));
   }
 
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
   // Clients 👫
 
+  addMyself() {
+    let geo = new THREE.BoxGeometry(1, 1, 1);
+    let mat = new THREE.MeshPhongMaterial({ color: "red" });
+    let myAvatar = new THREE.Mesh(geo, mat);
+    this.scene.add(myAvatar);
+    this.avatar = myAvatar;
+  }
+
   // add a client meshes, a video element and  canvas for three.js video texture
   addClient(id) {
     let videoMaterial = makeVideoMaterial(id);
     let otherMat = new THREE.MeshNormalMaterial();
 
-    let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
+    let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [
+      otherMat,
+      otherMat,
+      otherMat,
+      otherMat,
+      otherMat,
+      videoMaterial,
+    ]);
 
     // set position of head before adding to parent object
     head.position.set(0, 0, 0);
@@ -92,7 +108,7 @@ class Scene {
     this.scene.add(group);
 
     peers[id].group = group;
-    
+
     peers[id].previousPosition = new THREE.Vector3();
     peers[id].previousRotation = new THREE.Quaternion();
     peers[id].desiredPosition = new THREE.Vector3();
@@ -124,8 +140,16 @@ class Scene {
     this.lerpValue += 0.1; // updates are sent roughly every 1/5 second == 10 frames
     for (let id in peers) {
       if (peers[id].group) {
-        peers[id].group.position.lerpVectors(peers[id].previousPosition,peers[id].desiredPosition, this.lerpValue);
-        peers[id].group.quaternion.slerpQuaternions(peers[id].previousRotation,peers[id].desiredRotation, this.lerpValue);
+        peers[id].group.position.lerpVectors(
+          peers[id].previousPosition,
+          peers[id].desiredPosition,
+          this.lerpValue
+        );
+        peers[id].group.quaternion.slerpQuaternions(
+          peers[id].previousRotation,
+          peers[id].desiredRotation,
+          this.lerpValue
+        );
       }
     }
   }
@@ -156,11 +180,7 @@ class Scene {
   getPlayerPosition() {
     // TODO: use quaternion or are euler angles fine here?
     return [
-      [
-        this.camera.position.x,
-        this.camera.position.y,
-        this.camera.position.z,
-      ],
+      [this.camera.position.x, this.camera.position.y, this.camera.position.z],
       [
         this.camera.quaternion._x,
         this.camera.quaternion._y,
@@ -185,7 +205,7 @@ class Scene {
     }
 
     this.interpolatePositions();
-    this.controls.update();
+    this.controls.update(this.avatar);
     this.render();
   }
 
