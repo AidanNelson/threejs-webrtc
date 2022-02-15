@@ -56,9 +56,9 @@ window.onload = async () => {
   myScene = new Scene();
 
   // start sending position data to the server
-  setInterval(function() {
+  setInterval(function () {
     mySocket.emit("move", myScene.getPlayerPosition());
-  },200);
+  }, 200);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,7 +231,7 @@ function enableOutgoingStream() {
 
 function onPlayerMove() {
   // console.log('Sending movement update to server.');
-  
+
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -246,10 +246,11 @@ function createLocalVideoElement() {
   videoElement.width = videoWidth;
   videoElement.height = videoHeight;
   // videoElement.style = "visibility: hidden;";
-
+  if (localMediaStream) {
   let videoStream = new MediaStream([localMediaStream.getVideoTracks()[0]]);
-
-  videoElement.srcObject = videoStream;
+ 
+    videoElement.srcObject = videoStream;
+  }
   document.body.appendChild(videoElement);
 }
 
