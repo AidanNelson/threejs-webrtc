@@ -252,7 +252,7 @@ function createLocalVideoElement() {
 
     videoElement.srcObject = videoStream;
   }
-  document.body.appendChild(videoElement);
+  //document.body.appendChild(videoElement);
 }
 
 // created <video> element using client ID
@@ -271,7 +271,7 @@ function createClientMediaElements(_id) {
   audioEl.setAttribute("id", _id + "_audio");
   audioEl.controls = "controls";
   audioEl.volume = 1;
-  document.body.appendChild(audioEl);
+  //document.body.appendChild(audioEl);
 
   audioEl.addEventListener("loadeddata", () => {
     audioEl.play();

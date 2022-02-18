@@ -14,7 +14,7 @@ class Scene {
 
     //Utility
     this.width = window.innerWidth;
-    this.height = window.innerHeight * 0.9;
+    this.height = window.innerHeight; // * 0.9;
 
     // lerp value to be used when interpolating positions and rotations
     this.lerpValue = 0;
@@ -178,7 +178,7 @@ class Scene {
     requestAnimationFrame(() => this.update());
     this.frameCount++;
 
-    updateEnvironment();
+    //updateEnvironment();
 
     if (this.frameCount % 25 === 0) {
       this.updateClientVolumes();
@@ -219,6 +219,7 @@ function makeVideoMaterial(id) {
     overdraw: true,
     side: THREE.DoubleSide,
   });
+  // TODO: Add text to video: UserName
 
   return videoMaterial;
 }
