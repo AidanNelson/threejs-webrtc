@@ -75,14 +75,20 @@ class Scene {
   // Clients 👫
 
   // add a client meshes, a video element and  canvas for three.js video texture
-  addClient(id) {
+  addClient(id, username) {
+
     let videoMaterial = makeVideoMaterial(id);
+    let labelMaterial = makeLabelMaterial(username)
     let otherMat = new THREE.MeshNormalMaterial();
 
     let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
 
     // set position of head before adding to parent object
     head.position.set(0, 0, 0);
+
+    // ADD TEXT material (label) to head
+    labelMaterial.position.setY(1)
+    head.add(labelMaterial)
 
     // https://threejs.org/docs/index.html#api/en/objects/Group
     var group = new THREE.Group();
@@ -219,7 +225,9 @@ function makeVideoMaterial(id) {
     overdraw: true,
     side: THREE.DoubleSide,
   });
-  // TODO: Add text to video: UserName
-
   return videoMaterial;
+}
+
+function makeLabelMaterial (username) {
+  return new SpriteText(username || "Anonymous", 0.2);
 }
