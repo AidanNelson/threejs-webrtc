@@ -33,13 +33,6 @@ let peers = {};
 
 setupSocketServer();
 
-function emitPositons() {
-  setInterval(function () {
-    // update all clients of positions
-    io.sockets.emit("positions", peers);
-  }, 10);
-}
-
 function setupSocketServer() {
   // Set up each socket connection
   io.on("connection", (socket) => {
@@ -82,6 +75,14 @@ function setupSocketServer() {
         }
       });
     }
+
+    function emitPositons() {
+      setInterval(function () {
+        // update all clients of positions
+        io.sockets.emit("positions", peers);
+      }, 10);
+    }
+    
     function onSignal(){
     // Relay simple-peer signals back and forth
     socket.on("signal", (to, from, data) => {

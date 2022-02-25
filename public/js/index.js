@@ -59,40 +59,31 @@ window.onload = () => {
 };
 
 function handleForm(e){
-  e.preventDefault();
-    // Now that we are connected let's send our test call with callback
+    e.preventDefault();
     mySocket.emit('addUsername', 
         userName.value
     , async (existingPeers)=> {          
-          try{
-              userForm.style.display = "none";
-              // first get user media
-              
-              localMediaStream = await getMedia(mediaConstraints);
+   
+        userForm.style.display = "none";
+        // first get user media
+        localMediaStream = await getMedia(mediaConstraints);
 
-              createLocalVideoElement();
+        createLocalVideoElement();
 
-              
-              
-              // then initialize socket connection
-              initSocketConnection();
+        // then initialize socket connection
+        initSocketConnection();
 
-              //if (Object.keys(existingPeers).length === 1){ // else create it in processPeers
-              // finally create the threejs scene
-              console.log("Creating three.js scene...");
-              myScene = new Scene();
-              //}
+        // create the threejs scene
+        console.log("Creating three.js scene...");
+        myScene = new Scene();
 
-              processPeers(existingPeers)
+        processPeers(existingPeers)
 
-              // start sending position data to the server
-              setInterval(function () {
-                mySocket.emit("move", myScene.getPlayerPosition());
-              }, 200);
-          }
-          catch(err){
-            console.warn(err)
-          }
+        // start sending position data to the server
+        setInterval(function () {
+          mySocket.emit("move", myScene.getPlayerPosition());
+        }, 200);
+   
     });
 
 };
@@ -118,8 +109,6 @@ async function getMedia(_mediaConstraints) {
 function processPeers(newPeers){
   let idsArray = Object.keys(newPeers)
   let newPeersArray = Object.values(newPeers)
-
-  console.log(idsArray, newPeersArray)
   // for each existing user, add them as a client and add tracks to their peer connection
   for (let i = 0; i < idsArray.length; i++) {
 
@@ -143,6 +132,12 @@ function processPeers(newPeers){
 ////////////////////////////////////////////////////////////////////////////////
 // Socket.io
 ////////////////////////////////////////////////////////////////////////////////
+function initSocketConnection() {
+  onNewUser()
+  onUserDisconnected()
+  onSignal()
+  onPositions()
+}
 
 function onNewUser (){
   mySocket.on("newUser", (obj)=>{
@@ -160,10 +155,8 @@ function onNewUser (){
     }
   })
 }
-// establishes socket connection
-function initSocketConnection() {
 
-  onNewUser()
+function onUserDisconnected(){
   mySocket.on("userDisconnected", (clientCount, _id, _ids) => {
     // Update the data from the server
     if (_id != mySocket.id) {
@@ -173,7 +166,9 @@ function initSocketConnection() {
       delete peers[_id];
     }
   });
+}
 
+function onSignal(){
   mySocket.on("signal", (to, from, data) => {
     // console.log("Got a signal from the server: ", to, from, data);
 
@@ -198,7 +193,9 @@ function initSocketConnection() {
       peerConnection.signal(data);
     }
   });
+}
 
+function onPositions(){
   // Update when one of the users moves in space
   mySocket.on("positions", (_clientProps) => {
     myScene.updateClientPositions(_clientProps);
