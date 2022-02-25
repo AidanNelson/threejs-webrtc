@@ -77,7 +77,7 @@ function handleForm(e){
         console.log("Creating three.js scene...");
         myScene = new Scene();
 
-        processPeers(existingPeers)
+        processExistingPeers(existingPeers)
 
         // start sending position data to the server
         setInterval(function () {
@@ -106,7 +106,22 @@ async function getMedia(_mediaConstraints) {
   return stream;
 }
 
-function processPeers(newPeers){
+function processNewPeer(obj){
+  const theirId = obj.socketId
+  const username = obj.username
+  if (theirId != mySocket.id && !(theirId in peers)) {
+    console.log("A new user connected with the ID: " + theirId);
+
+    console.log("Adding client with id " + theirId);
+    peers[theirId] = {};
+
+    createClientMediaElements(theirId);
+
+    peers = myScene.addClient(theirId, username, peers);
+  }
+}
+
+function processExistingPeers(newPeers){
   let idsArray = Object.keys(newPeers)
   let newPeersArray = Object.values(newPeers)
   // for each existing user, add them as a client and add tracks to their peer connection
@@ -141,18 +156,7 @@ function initSocketConnection() {
 
 function onNewUser (){
   mySocket.on("newUser", (obj)=>{
-    const theirId = obj.socketId
-    const username = obj.username
-    if (theirId != mySocket.id && !(theirId in peers)) {
-      console.log("A new user connected with the ID: " + theirId);
-
-      console.log("Adding client with id " + theirId);
-      peers[theirId] = {};
-
-      createClientMediaElements(theirId);
-
-      peers = myScene.addClient(theirId, username, peers);
-    }
+    processNewPeer(obj)
   })
 }
 
