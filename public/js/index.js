@@ -35,30 +35,66 @@ let mediaConstraints = {
     frameRate: videoFrameRate,
   },
 };
+let userForm, userFormArea, canvasContainer, userName, startButton
 
 ////////////////////////////////////////////////////////////////////////////////
 // Start-Up Sequence:
 ////////////////////////////////////////////////////////////////////////////////
 
-window.onload = async () => {
-  console.log("Window loaded.");
+window.onload = () => {
+  console.log("Initializing socket.io...");
+  mySocket = io();
 
-  // first get user media
-  localMediaStream = await getMedia(mediaConstraints);
+  mySocket.on("connect", () => {
+    console.log("My socket ID:", mySocket.id);
+  });
 
-  createLocalVideoElement();
+   userForm = document.getElementById("userForm");
+   userFormArea = document.getElementById("userFormArea");
+   canvasContainer = document.getElementById("canvas-container");
+   userName = document.getElementById("username");
+   startButton = document.getElementById("start");
+   
+   userForm.addEventListener('submit', handleForm);   
+};
 
-  // then initialize socket connection
-  initSocketConnection();
+function handleForm(e){
+  e.preventDefault();
+    // Now that we are connected let's send our test call with callback
+    mySocket.emit('addUsername', 
+        userName.value
+    , async (existingPeers)=> {          
+          try{
+              userForm.style.display = "none";
+              // first get user media
+              
+              localMediaStream = await getMedia(mediaConstraints);
 
-  // finally create the threejs scene
-  console.log("Creating three.js scene...");
-  myScene = new Scene();
+              createLocalVideoElement();
 
-  // start sending position data to the server
-  setInterval(function () {
-    mySocket.emit("move", myScene.getPlayerPosition());
-  }, 200);
+              
+              
+              // then initialize socket connection
+              initSocketConnection();
+
+              //if (Object.keys(existingPeers).length === 1){ // else create it in processPeers
+              // finally create the threejs scene
+              console.log("Creating three.js scene...");
+              myScene = new Scene();
+              //}
+
+              processPeers(existingPeers)
+
+              // start sending position data to the server
+              setInterval(function () {
+                mySocket.emit("move", myScene.getPlayerPosition());
+              }, 200);
+          }
+          catch(err){
+            console.warn(err)
+          }
+    });
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,43 +115,39 @@ async function getMedia(_mediaConstraints) {
   return stream;
 }
 
+function processPeers(newPeers){
+  let idsArray = Object.keys(newPeers)
+  let newPeersArray = Object.values(newPeers)
+
+  console.log(idsArray, newPeersArray)
+  // for each existing user, add them as a client and add tracks to their peer connection
+  for (let i = 0; i < idsArray.length; i++) {
+
+    if (idsArray[i] != mySocket.id) {
+      let theirId = idsArray[i];
+      let theirPeer = newPeersArray[i]
+
+      console.log("Adding client with id: ", theirId, " and peer: ", theirPeer);
+      peers[theirId] = theirPeer;
+
+      let pc = createPeerConnection(theirId, true);
+      peers[theirId].peerConnection = pc;
+
+      createClientMediaElements(theirId);
+
+      peers = myScene.addClient(theirId, theirPeer.username, peers);
+    }
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Socket.io
 ////////////////////////////////////////////////////////////////////////////////
 
-// establishes socket connection
-function initSocketConnection() {
-  console.log("Initializing socket.io...");
-  mySocket = io();
-
-  mySocket.on("connect", () => {
-    console.log("My socket ID:", mySocket.id);
-  });
-
-  //On connection server sends the client his ID and a list of all keys
-  mySocket.on("introduction", (otherClientIds) => {
-
-    // for each existing user, add them as a client and add tracks to their peer connection
-    for (let i = 0; i < otherClientIds.length; i++) {
-      if (otherClientIds[i] != mySocket.id) {
-        let theirId = otherClientIds[i];
-
-        console.log("Adding client with id " + theirId);
-        peers[theirId] = {};
-
-        let pc = createPeerConnection(theirId, true);
-        peers[theirId].peerConnection = pc;
-
-        createClientMediaElements(theirId);
-
-        myScene.addClient(theirId);
-
-      }
-    }
-  });
-
-  // when a new user has entered the server
-  mySocket.on("newUserConnected", (theirId) => {
+function onNewUser (){
+  mySocket.on("newUser", (obj)=>{
+    const theirId = obj.socketId
+    const username = obj.username
     if (theirId != mySocket.id && !(theirId in peers)) {
       console.log("A new user connected with the ID: " + theirId);
 
@@ -124,13 +156,16 @@ function initSocketConnection() {
 
       createClientMediaElements(theirId);
 
-      myScene.addClient(theirId);
+      peers = myScene.addClient(theirId, username, peers);
     }
-  });
+  })
+}
+// establishes socket connection
+function initSocketConnection() {
 
+  onNewUser()
   mySocket.on("userDisconnected", (clientCount, _id, _ids) => {
     // Update the data from the server
-
     if (_id != mySocket.id) {
       console.log("A user disconnected with the id: " + _id);
       myScene.removeClient(_id);
@@ -252,7 +287,7 @@ function createLocalVideoElement() {
 
     videoElement.srcObject = videoStream;
   }
-  //document.body.appendChild(videoElement);
+  document.body.appendChild(videoElement);
 }
 
 // created <video> element using client ID
@@ -271,7 +306,7 @@ function createClientMediaElements(_id) {
   audioEl.setAttribute("id", _id + "_audio");
   audioEl.controls = "controls";
   audioEl.volume = 1;
-  //document.body.appendChild(audioEl);
+  document.body.appendChild(audioEl);
 
   audioEl.addEventListener("loadeddata", () => {
     audioEl.play();

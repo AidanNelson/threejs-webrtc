@@ -75,7 +75,7 @@ class Scene {
   // Clients 👫
 
   // add a client meshes, a video element and  canvas for three.js video texture
-  addClient(id, username) {
+  addClient(id, username, peers) {
 
     let videoMaterial = makeVideoMaterial(id);
     let labelMaterial = makeLabelMaterial(username)
@@ -103,6 +103,7 @@ class Scene {
     peers[id].previousRotation = new THREE.Quaternion();
     peers[id].desiredPosition = new THREE.Vector3();
     peers[id].desiredRotation = new THREE.Quaternion();
+    return peers
   }
 
   removeClient(id) {
