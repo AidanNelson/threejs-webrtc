@@ -9,6 +9,8 @@
 
 	<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
+	<link rel="stylesheet" href="styles.css">
+
 	<script src="js/libs/socket.io.min.js"></script>
 	<script src="js/libs/three.min.js"></script>
 	<script src="js/libs/firstPersonControls.js"></script>
@@ -19,41 +21,26 @@
 	<script src="js/scene.js"></script>
 	<script src="js/index.js"></script>
 
-	<style>
-		body {
-			overflow: hidden;
-		}
-
-		#info {
-			padding: 1em;
-			border: 1em;
-			color: rgb(223, 223, 223);
-		}
-	</style>
-
-
 </head>
 
-<body style="background: yellow; margin: 0; padding: 0">
+<body>
 
 	<div id="canvas-container"></div>
 
-
-	<div id="userFormArea" class="row" style="width: 200px;
-    height: 200px;
-    position: fixed;
-    top: 100px;">
-		<div class="col-md-12">
-			<form id="userForm">
-				<div class="form-group">
-					<label>Enter Username</label>
-					<input class="form-control" id="username" required></input>
-					<br />
-					<input id="start" type="submit" class="btn btn-primary" value="Start"></input>
-				</div>
-			</form>
+	<form id="userForm">
+		<h1>Welcome</h1>
+		<p>Enter your name to continue.</p>
+		<div class="input-wrapper">
+		  <input type="text" placeholder="Your name" id="username"/>
+		  <i class="bx bxs-user-circle"></i>
 		</div>
-	</div>
+		<div>
+		  <button type="submit" id="start">
+			Start
+			<i class='bx bx-right-arrow-alt'></i>
+		  </button>
+		</div>
+	  </form>
 
 </body>
 

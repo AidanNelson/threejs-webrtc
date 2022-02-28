@@ -1,0 +1,119 @@
+* {
+    box-sizing: border-box;
+  }
+  
+  body {
+    background-color: #f2f5ff;
+    color: #31507d;
+    display: flex;
+    font-family: "Poppins", sans-serif;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+
+#info {
+    padding: 1em;
+    border: 1em;
+    color: rgb(223, 223, 223);
+}
+video{
+    display: none;
+}
+#canvas-container{
+    height: 100%;
+}
+canvas{
+    height: 100%;
+}
+  
+  form {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: rgba(74, 79, 97, 0.25) 0px 13px 27px -5px, rgba(74, 79, 97, 0.3) 0px 8px 16px -8px;
+    padding: 20px 35px 35px 35px;
+    text-align: center;
+    width: 500px;
+  }
+  form i {
+    color: #fff;
+    font-size: 30px;
+    transition: color 250ms ease-in;
+  }
+  form .input-wrapper {
+    margin-bottom: 30px;
+    position: relative;
+  }
+  form .input-wrapper i {
+    color: #a4a9b6;
+    position: absolute;
+    opacity: 0.85;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  form h1 {
+    font-weight: 600;
+    letter-spacing: 0;
+    margin: 25px 0 0 0;
+  }
+  form p {
+    color: #a4a9b6;
+    font-size: 18px;
+    margin: 2px 0 44px 0;
+  }
+  form input[type=text],
+  form input[type=password] {
+    border: 1px solid #d8ddf0;
+    border-radius: 6px;
+    font-size: 15px;
+    padding: 13px 9px 13px 9px;
+    transition: border-color 250ms ease-in;
+  }
+  form input[type=text]:focus,
+  form input[type=password]:focus {
+    border-color: #4c70ff;
+    outline: none;
+  }
+  form input[type=text]:focus + i,
+  form input[type=password]:focus + i {
+    color: #4c70ff;
+  }
+  form input {
+    width: 100%;
+  }
+  form ::-moz-placeholder {
+    color: #a4a9b6;
+    font-size: 15px;
+    opacity: 1;
+  }
+  form :-ms-input-placeholder {
+    color: #a4a9b6;
+    font-size: 15px;
+    opacity: 1;
+  }
+  form ::placeholder {
+    color: #a4a9b6;
+    font-size: 15px;
+    opacity: 1;
+  }
+  form button[type=submit] {
+    background: #4c70ff;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    padding: 18px 10px;
+    width: 100%;
+  }
+  form button[type=submit] i {
+    margin-left: 5px;
+  }
