@@ -13,6 +13,7 @@
 	<script src="js/libs/three.min.js"></script>
 	<script src="js/libs/firstPersonControls.js"></script>
 	<script src="js/libs/simplepeer.min.js"></script>
+	<script src="js/libs/GLTFLoader.js"></script>
 
 	<script src="js/environment.js"></script>
 	<script src="js/scene.js"></script>
@@ -34,6 +35,20 @@
 </head>
 
 <body style="background: yellow; margin: 0; padding: 0">
+
+	<!-- Audio Element -->
+	<audio loop id="myAudio" preload="auto">
+		<source src="assets/sound.mp3" type="audio/mpeg">
+	</audio>
+
+	<!-- Video Element -->
+	<video id="myVideo" loop crossOrigin="anonymous" playsinline style="display:none">
+		<source src="assets/video.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+	</video>
+
+
+
+
 
 	<div id="canvas-container"></div>
 

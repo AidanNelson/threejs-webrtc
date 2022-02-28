@@ -57,6 +57,16 @@ class Scene {
     this.addLights();
     createEnvironment(this.scene);
 
+
+    // only add audio element after user presses 'o' to 
+    // ensure element will play 
+    // (browsers don't like to auto-play audio!)
+    document.addEventListener('keydown', (e) => {
+      if (e.key == "o") {
+        this.addExternalMedia();
+      }
+    });
+
     // Start the loop
     this.frameCount = 0;
     this.update();
@@ -70,6 +80,49 @@ class Scene {
     this.scene.add(new THREE.AmbientLight(0xffffe6, 0.7));
   }
 
+  addExternalMedia() {
+    //*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//
+    //Add audio source with ID "myAudio"
+    let audioElement = document.getElementById('myAudio');
+    audioElement.play();
+
+    let positionalAudioElement = new THREE.PositionalAudio(this.listener);
+    positionalAudioElement.setMediaElementSource(audioElement);
+    positionalAudioElement.setRefDistance(1);
+
+    let geo = new THREE.SphereGeometry(1, 12, 12);
+    let mat = new THREE.MeshNormalMaterial();
+    let mesh = new THREE.Mesh(geo, mat);
+    mesh.add(positionalAudioElement);
+    this.scene.add(mesh);
+    mesh.position.set(10, 0, 0);
+
+    //*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//
+    // add video source with ID "myVideo"
+    let videoElement = document.getElementById('myVideo');
+    videoElement.play();
+
+    let videoGeo = new THREE.BoxGeometry(20,20,20);
+    let videoTex = new THREE.VideoTexture(videoElement);
+    let videoMat = new THREE.MeshBasicMaterial({
+      map: videoTex,
+      overdraw:true,
+      side:THREE.DoubleSide,
+    })    
+    let videoMesh = new THREE.Mesh(videoGeo,videoMat);
+    this.scene.add(videoMesh);
+
+
+
+    //*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//
+    // add 3D model
+    let loader = new THREE.GLTFLoader();
+    loader.load('assets/model.glb', (gltf) => {
+      this.scene.add(gltf.scene);
+    });
+
+  }
+
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
   // Clients 👫
@@ -79,7 +132,7 @@ class Scene {
     let videoMaterial = makeVideoMaterial(id);
     let otherMat = new THREE.MeshNormalMaterial();
 
-    let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
+    let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [otherMat, otherMat, otherMat, otherMat, otherMat, videoMaterial]);
 
     // set position of head before adding to parent object
     head.position.set(0, 0, 0);
@@ -92,7 +145,7 @@ class Scene {
     this.scene.add(group);
 
     peers[id].group = group;
-    
+
     peers[id].previousPosition = new THREE.Vector3();
     peers[id].previousRotation = new THREE.Quaternion();
     peers[id].desiredPosition = new THREE.Vector3();
@@ -124,8 +177,8 @@ class Scene {
     this.lerpValue += 0.1; // updates are sent roughly every 1/5 second == 10 frames
     for (let id in peers) {
       if (peers[id].group) {
-        peers[id].group.position.lerpVectors(peers[id].previousPosition,peers[id].desiredPosition, this.lerpValue);
-        peers[id].group.quaternion.slerpQuaternions(peers[id].previousRotation,peers[id].desiredRotation, this.lerpValue);
+        peers[id].group.position.lerpVectors(peers[id].previousPosition, peers[id].desiredPosition, this.lerpValue);
+        peers[id].group.quaternion.slerpQuaternions(peers[id].previousRotation, peers[id].desiredRotation, this.lerpValue);
       }
     }
   }
