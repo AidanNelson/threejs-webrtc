@@ -35,7 +35,7 @@ let mediaConstraints = {
     frameRate: videoFrameRate,
   },
 };
-let userForm, userFormArea, canvasContainer, userName, startButton, isStudent
+let userForm, userFormArea, canvasContainer, userName, startButton
 
 ////////////////////////////////////////////////////////////////////////////////
 // Start-Up Sequence:
@@ -67,7 +67,6 @@ window.onload = () => {
 };
 
 const handleForm = (userName, isStudent)=>{
-    isStudent = isStudent
     mySocket.emit('addUsername', 
         {username: userName.value, isStudent}
     , async (existingPeers)=> {          
@@ -78,8 +77,7 @@ const handleForm = (userName, isStudent)=>{
 
         createLocalVideoElement();
 
-        isTutor = false // hardcoded for now
-        createControlElements(isTutor)
+        createControlElements(isStudent)
 
         // then initialize socket connection
         initSocketConnection();
@@ -285,7 +283,7 @@ function onPlayerMove() {
 //////////////////////////////////////////////////////////////////////
 // Utilities 🚂
 
-function createControlElements(isTutor){
+function createControlElements(isStudent){
   const box = document.createElement('div');
   box.style.position = 'fixed';
   box.style.bottom = '20px';
@@ -295,6 +293,7 @@ function createControlElements(isTutor){
   box.style.backgroundColor = 'white';
   box.style.padding = '20px';
 
+  const emojisPanel = document.createElement('div');
 
   const reactIcon = document.createElement('img');
   reactIcon.setAttribute(
@@ -304,6 +303,29 @@ function createControlElements(isTutor){
   reactIcon.setAttribute('alt', 'Reactions');
   reactIcon.setAttribute('height', 50);
   reactIcon.setAttribute('width', 50);
+  reactIcon.addEventListener('click', ()=>{
+    
+
+    if (emojisPanel.classList.contains('active')) {
+      emojisPanel.classList.remove("active");
+      emojisPanel.classList.add("disable");
+
+      emojisPanel.style.display = 'none';
+
+    } else {
+      emojisPanel.classList.remove("disable");
+      emojisPanel.classList.add("active");
+
+      emojisPanel.style.position = 'fixed';
+      emojisPanel.style.bottom = '77px';
+      emojisPanel.style.left = '10px';
+      emojisPanel.style.width = '180px';
+      emojisPanel.style.height = '50px';
+      emojisPanel.style.backgroundColor = 'white';
+      emojisPanel.style.padding = '20px';
+      document.body.appendChild(emojisPanel);
+    }
+  })
 
   const raiseHandIcon = document.createElement('img');
   raiseHandIcon.setAttribute(
@@ -325,8 +347,11 @@ function createControlElements(isTutor){
   focusModeIcon.setAttribute('alt', 'Focus Mode');
   focusModeIcon.setAttribute('height', 50);
   focusModeIcon.setAttribute('width', 50);
+  focusModeIcon.addEventListener('click', ()=>{
+    console.log('... clicked')
+  })
 
-  if (isTutor){
+  if (isStudent){
     box.appendChild(focusModeIcon);
   }else{
     box.appendChild(raiseHandIcon);
