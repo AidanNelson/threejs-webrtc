@@ -316,6 +316,7 @@ function createControlElements(isStudent){
       emojisPanel.classList.remove("disable");
       emojisPanel.classList.add("active");
 
+      emojisPanel.style.display = 'block';
       emojisPanel.style.position = 'fixed';
       emojisPanel.style.bottom = '77px';
       emojisPanel.style.left = '10px';
@@ -323,6 +324,9 @@ function createControlElements(isStudent){
       emojisPanel.style.height = '50px';
       emojisPanel.style.backgroundColor = 'white';
       emojisPanel.style.padding = '20px';
+
+      
+
       document.body.appendChild(emojisPanel);
     }
   })
