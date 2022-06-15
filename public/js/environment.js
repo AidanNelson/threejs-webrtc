@@ -3,12 +3,26 @@ let myMesh;
 function createEnvironment(scene) {
   console.log("Adding environment");
 
-  // let texture = new THREE.TextureLoader().load("../assets/texture.png");
-  // let myGeometry = new THREE.SphereGeometry(3, 12, 12);
-  // let myMaterial = new THREE.MeshBasicMaterial({ map: texture });
-  // myMesh = new THREE.Mesh(myGeometry, myMaterial);
-  // myMesh.position.set(5, 2, 5);
-  // scene.add(myMesh);
+  presentationArea(scene)
+  whiteBoard(scene)
+}
+
+function whiteBoard(scene) {
+  const geometry = new THREE.BoxGeometry( 22, 12, 0.5 );
+  const materialWhite = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+  const materialBlack = new THREE.MeshBasicMaterial( {color: 0x000000} );
+  const whiteboard = new THREE.Mesh( geometry, [materialBlack,materialBlack,materialBlack,materialBlack,materialWhite,materialBlack] );
+  whiteboard.position.set(0,8, -15)
+
+  scene.add( whiteboard );
+}
+
+function presentationArea(scene) {
+  const geometry = new THREE.CylinderGeometry( 10, 10, 1, 30, 1, false );
+  const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+  const area = new THREE.Mesh( geometry, material );
+  area.position.set(0,0, 0)
+  scene.add( area );
 }
 
 
