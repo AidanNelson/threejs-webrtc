@@ -335,9 +335,12 @@ function createControlElements(isStudent){
       emojisPanel.style.backgroundColor = 'white';
       emojisPanel.style.padding = '20px';
 
-
-
       document.body.appendChild(emojisPanel);
+      
+      emojisPanel.appendChild(smileEmojiIcon);
+      smileEmojiIcon.addEventListener('click', ()=>{
+        console.log('... clicked')
+      })
     }
   })
 
@@ -355,10 +358,24 @@ function createControlElements(isStudent){
     
   })
 
+  const smileEmojiIcon = document.createElement('img');
+  smileEmojiIcon.setAttribute(
+    'src',
+    '../assets/smile.png',
+  );
+  smileEmojiIcon.setAttribute('alt', 'Smile Emoji');
+  smileEmojiIcon.setAttribute('height', 30);
+  smileEmojiIcon.setAttribute('width', 30);
+  smileEmojiIcon.addEventListener('click', ()=>{
+
+   // onReaction() 
+    
+  })
+
   const focusModeIcon = document.createElement('img');
   focusModeIcon.setAttribute(
     'src',
-    'target.png',
+    '../assets/target.png',
   );
   focusModeIcon.setAttribute('alt', 'Focus Mode');
   focusModeIcon.setAttribute('height', 50);
@@ -367,8 +384,9 @@ function createControlElements(isStudent){
     console.log('... clicked')
   })
 
-  if (isStudent){
+  if (!isStudent){
     box.appendChild(focusModeIcon);
+    box.appendChild(reactIcon);
   }else{
     box.appendChild(raiseHandIcon);
     box.appendChild(reactIcon);
