@@ -98,7 +98,8 @@ class Scene {
     this.scene.add(group);
 
     peers[id].group = group;
-    
+    peers[id].videoMaterial = videoMaterial;
+
     peers[id].previousPosition = new THREE.Vector3();
     peers[id].previousRotation = new THREE.Quaternion();
     peers[id].desiredPosition = new THREE.Vector3();
@@ -108,21 +109,51 @@ class Scene {
 
   removeClient(id) {
     this.scene.remove(peers[id].group);
+    this.removeWhiteboardVideo(id);
   }
 
   // overloaded function can deal with new info or not
   updateClientPositions(clientProperties) {
     this.lerpValue = 0;
     for (let id in clientProperties) {
-      if (id != mySocket.id) {
-        peers[id].previousPosition.copy(peers[id].group.position);
-        peers[id].previousRotation.copy(peers[id].group.quaternion);
-        peers[id].desiredPosition = new THREE.Vector3().fromArray(
+      this.drawAvatar(clientProperties, id);
+    }
+  }
+
+  drawAvatar(clientProperties, id) {
+    if (id != mySocket.id) {
+      peers[id].previousPosition.copy(peers[id].group.position);
+      peers[id].previousRotation.copy(peers[id].group.quaternion);
+      peers[id].desiredPosition = new THREE.Vector3().fromArray(
           clientProperties[id].position
-        );
-        peers[id].desiredRotation = new THREE.Quaternion().fromArray(
+      );
+      peers[id].desiredRotation = new THREE.Quaternion().fromArray(
           clientProperties[id].rotation
-        );
+      );
+    }
+  }
+
+  removeWhiteboardVideo(id) {
+    if (peers[id].whiteboard) {
+      this.scene.remove(peers[id].whiteboard);
+    }
+  }
+
+  updateWhiteboardVideos(peers) {
+    let i = 0;
+    for (let id in peers) {
+      i++;
+      if (peers[id].videoMaterial) {
+        const geometry = new THREE.BoxGeometry(5, 5, 0.5);
+        const materialBlack = new THREE.MeshBasicMaterial({color: 0x000000});
+        const whiteboard = new THREE.Mesh(geometry, [materialBlack, materialBlack, materialBlack, materialBlack, peers[id].videoMaterial, materialBlack]);
+        whiteboard.position.set(15, 17 - 6 * i, -15)
+        this.scene.add(whiteboard);
+
+        if (peers[id].whiteboard) {
+          this.scene.remove(peers[id].whiteboard);
+        }
+        peers[id].whiteboard = whiteboard;
       }
     }
   }

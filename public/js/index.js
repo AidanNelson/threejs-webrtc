@@ -127,6 +127,7 @@ function processNewPeer(obj){
     createClientMediaElements(theirId);
 
     peers = myScene.addClient(theirId, username, peers);
+    myScene.updateWhiteboardVideos(peers);
   }
 }
 
@@ -151,6 +152,7 @@ function processExistingPeers(newPeers){
       peers = myScene.addClient(theirId, theirPeer.username, peers);
     }
   }
+  myScene.updateWhiteboardVideos(peers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,6 +187,7 @@ function onUserDisconnected(){
       removeClientVideoElementAndCanvas(_id);
       delete peers[_id];
     }
+    myScene.updateWhiteboardVideos(peers);
   });
 }
 
