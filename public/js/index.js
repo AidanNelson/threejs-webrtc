@@ -35,7 +35,7 @@ let mediaConstraints = {
     frameRate: videoFrameRate,
   },
 };
-let userForm, userFormArea, canvasContainer, userName, startButton
+let userForm, userFormArea, canvasContainer, userName, startButton, isStudent
 
 ////////////////////////////////////////////////////////////////////////////////
 // Start-Up Sequence:
@@ -53,15 +53,23 @@ window.onload = () => {
    userFormArea = document.getElementById("userFormArea");
    canvasContainer = document.getElementById("canvas-container");
    userName = document.getElementById("username");
-   startButton = document.getElementById("start");
-   
-   userForm.addEventListener('submit', handleForm);   
+   startAsStudent = document.getElementById("student");
+   startAsTutor = document.getElementById("tutor");
+
+   startAsStudent.onclick = (e)=> {
+    e.preventDefault()
+    handleForm(userName, true)
+    }
+   startAsTutor.onclick = (e)=> {
+     e.preventDefault()
+     handleForm(userName, false)
+    }
 };
 
-function handleForm(e){
-    e.preventDefault();
+const handleForm = (userName, isStudent)=>{
+    isStudent = isStudent
     mySocket.emit('addUsername', 
-        userName.value
+        {username: userName.value, isStudent}
     , async (existingPeers)=> {          
    
         userForm.style.display = "none";
@@ -69,6 +77,9 @@ function handleForm(e){
         localMediaStream = await getMedia(mediaConstraints);
 
         createLocalVideoElement();
+
+        isTutor = false // hardcoded for now
+        createControlElements(isTutor)
 
         // then initialize socket connection
         initSocketConnection();
@@ -273,6 +284,56 @@ function onPlayerMove() {
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 // Utilities 🚂
+
+function createControlElements(isTutor){
+  const box = document.createElement('div');
+  box.style.position = 'fixed';
+  box.style.bottom = '20px';
+  box.style.left = '10px';
+  box.style.width = '250px';
+  box.style.height = '50px';
+  box.style.backgroundColor = 'white';
+  box.style.padding = '20px';
+
+
+  const reactIcon = document.createElement('img');
+  reactIcon.setAttribute(
+    'src',
+    'thumbs-up.png',
+  );
+  reactIcon.setAttribute('alt', 'Reactions');
+  reactIcon.setAttribute('height', 50);
+  reactIcon.setAttribute('width', 50);
+
+  const raiseHandIcon = document.createElement('img');
+  raiseHandIcon.setAttribute(
+    'src',
+    'thumbs-up.png',
+  );
+  raiseHandIcon.setAttribute('alt', 'Raise Hand');
+  raiseHandIcon.setAttribute('height', 50);
+  raiseHandIcon.setAttribute('width', 50);
+  raiseHandIcon.addEventListener('click', ()=>{
+    console.log('... clicked')
+  })
+
+  const focusModeIcon = document.createElement('img');
+  focusModeIcon.setAttribute(
+    'src',
+    'thumbs-up.png',
+  );
+  focusModeIcon.setAttribute('alt', 'Focus Mode');
+  focusModeIcon.setAttribute('height', 50);
+  focusModeIcon.setAttribute('width', 50);
+
+  if (isTutor){
+    box.appendChild(focusModeIcon);
+  }else{
+    box.appendChild(raiseHandIcon);
+    box.appendChild(reactIcon);
+  }
+  document.body.appendChild(box);
+}
 
 // created <video> element for local mediastream
 function createLocalVideoElement() {

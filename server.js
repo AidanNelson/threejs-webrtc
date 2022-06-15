@@ -45,11 +45,14 @@ function setupSocketServer() {
     );
 
     socket.on("addUsername" , (data, callback)=>{
+      const username = data['userName']
+      const isStudent = data['isStudent']
       //Add a new client indexed by their socket id
       peers[socket.id] = {
-        username : data,
+        username,
         position: [0, 0.5, 0],
         rotation: [0, 0, 0, 1], // stored as XYZW values of Quaternion
+        isStudent
       };
 
       newUser()
@@ -73,6 +76,9 @@ function setupSocketServer() {
           peers[socket.id].position = data[0];
           peers[socket.id].rotation = data[1];
         }
+
+        console.log(peers[socket.id].rotation)
+
       });
     }
 
