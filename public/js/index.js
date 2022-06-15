@@ -169,6 +169,13 @@ function onNewUser (){
   })
 }
 
+function onRaiseHand(){
+//  mySocket.emit('addUsername', 
+//  {username: userName.value, isStudent}
+//, async (existingPeers)=> {    })
+
+}
+
 function onUserDisconnected(){
   mySocket.on("userDisconnected", (clientCount, _id, _ids) => {
     // Update the data from the server
@@ -291,18 +298,18 @@ function createControlElements(isStudent){
   box.style.width = '250px';
   box.style.height = '50px';
   box.style.backgroundColor = 'white';
-  box.style.padding = '20px';
+  box.style.padding = '7px';
 
   const emojisPanel = document.createElement('div');
 
   const reactIcon = document.createElement('img');
   reactIcon.setAttribute(
     'src',
-    'thumbs-up.png',
+    '../assets/thumbs-up.png',
   );
   reactIcon.setAttribute('alt', 'Reactions');
-  reactIcon.setAttribute('height', 50);
-  reactIcon.setAttribute('width', 50);
+  reactIcon.setAttribute('height', 30);
+  reactIcon.setAttribute('width', 30);
   reactIcon.addEventListener('click', ()=>{
     
 
@@ -325,7 +332,7 @@ function createControlElements(isStudent){
       emojisPanel.style.backgroundColor = 'white';
       emojisPanel.style.padding = '20px';
 
-      
+
 
       document.body.appendChild(emojisPanel);
     }
@@ -334,19 +341,21 @@ function createControlElements(isStudent){
   const raiseHandIcon = document.createElement('img');
   raiseHandIcon.setAttribute(
     'src',
-    'thumbs-up.png',
+    '../assets/open-hand.png',
   );
   raiseHandIcon.setAttribute('alt', 'Raise Hand');
-  raiseHandIcon.setAttribute('height', 50);
-  raiseHandIcon.setAttribute('width', 50);
+  raiseHandIcon.setAttribute('height', 30);
+  raiseHandIcon.setAttribute('width', 30);
   raiseHandIcon.addEventListener('click', ()=>{
-    console.log('... clicked')
+
+    onRaiseHand()
+    
   })
 
   const focusModeIcon = document.createElement('img');
   focusModeIcon.setAttribute(
     'src',
-    'thumbs-up.png',
+    'target.png',
   );
   focusModeIcon.setAttribute('alt', 'Focus Mode');
   focusModeIcon.setAttribute('height', 50);
