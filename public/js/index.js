@@ -168,6 +168,7 @@ function initSocketConnection() {
   onSignal()
   onPositions()
   onPeerDrawPath()
+  onHandRaised()
 }
 
 function onNewUser (){
@@ -176,11 +177,18 @@ function onNewUser (){
   })
 }
 
-function onRaiseHand(){
-//  mySocket.emit('addUsername',
-//  {username: userName.value, isStudent}
-//, async (existingPeers)=> {    })
+function onHandRaised(){
+  mySocket.on("onHandRaised", (_clientProps) => {
+    console.log('onHandRaised ...', _clientProps)
+    /*for (let id in _clientProps) {
+      myScene.raiseHand(_clientProps, id);
+    }
+    */
+  });
+}
 
+function onRaiseHand(){
+  mySocket.emit('onRaiseHand', mySocket.id)
 }
 
 function onUserDisconnected(){

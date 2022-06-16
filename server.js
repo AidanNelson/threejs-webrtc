@@ -52,17 +52,30 @@ function setupSocketServer() {
         username,
         position: [0, 0.5, 0],
         rotation: [0, 0, 0, 1], // stored as XYZW values of Quaternion
-        isStudent
+        isStudent,
+        handRaised:false
       };
 
       newUser()
       onMove()
+      onRaiseHand()
       emitPositons()
       onSignal()
       onDisconnect()
       onDrawPath()
       callback(peers);
     })
+
+    function onRaiseHand(){
+      socket.on("onRaiseHand" , (data)=>{
+          try{
+            peers[data].handRaised = true
+            io.emit("onHandRaised", peers);
+          }catch(err){
+            console.error(err)
+          }
+      })
+    }
 
     function newUser(){
       io.emit(
