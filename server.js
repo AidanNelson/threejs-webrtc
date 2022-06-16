@@ -60,6 +60,7 @@ function setupSocketServer() {
       emitPositons()
       onSignal()
       onDisconnect()
+      onDrawPath()
       callback(peers);
     })
 
@@ -76,9 +77,6 @@ function setupSocketServer() {
           peers[socket.id].position = data[0];
           peers[socket.id].rotation = data[1];
         }
-
-        console.log(peers[socket.id].rotation)
-
       });
     }
 
@@ -88,7 +86,7 @@ function setupSocketServer() {
         io.sockets.emit("positions", peers);
       }, 10);
     }
-    
+
     function onSignal(){
     // Relay simple-peer signals back and forth
     socket.on("signal", (to, from, data) => {
@@ -118,6 +116,14 @@ function setupSocketServer() {
         io.engine.clientsCount +
         " clients connected"
       );
+    });
+    }
+
+    function onDrawPath(){
+    //Handle the drawing of paths
+    socket.on("drawPath", (data) => {
+        console.log("emit peerDrawPath", data);
+      io.sockets.emit("peerDrawPath", data);
     });
     }
   });

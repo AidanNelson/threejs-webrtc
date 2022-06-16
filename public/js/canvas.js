@@ -11,8 +11,6 @@ function initCanvas() {
     tool.onMouseDrag = onMouseDrag;
     tool.onMouseUp = onMouseUp;
 
-    var path = new paper.Path();
-
     var rect = new paper.Path.Rectangle({
         point: [0, 0],
         size: [view.size.width, view.size.height],
@@ -50,11 +48,11 @@ function onMouseDown(event) {
     }
 
     // Create a new path and set its stroke color to black:
-    path = new Path({
+    path = new paper.Path({
         segments: [event.point],
         strokeColor: 'black',
         // Select the path, so we can see its segment points:
-        fullySelected: true
+        fullySelected: false
     });
 }
 
@@ -70,20 +68,30 @@ function onMouseDrag(event) {
 
 // When the mouse is released, we simplify the path:
 function onMouseUp(event) {
-    var segmentCount = path.segments.length;
-
     // When the mouse is released, simplify it:
     path.simplify(10);
 
     // Select the path, so we can see its segments:
     path.fullySelected = false;
 
+    // emit update to peers
+    mySocket.emit("drawPath", JSON.parse(path.exportJSON())[1].segments);
+
+    // update screen in 3D canvas
     setTimeout(function() {
         drawingTexture.needsUpdate = true;
     }, 100);
+}
 
-    // var newSegmentCount = path.segments.length;
-    // var difference = segmentCount - newSegmentCount;
-    // var percentage = 100 - Math.round(newSegmentCount / segmentCount * 100);
-    // textItem.content = difference + ' of the ' + segmentCount + ' segments were removed. Saving ' + percentage + '%';
+function updateCanvas(pathJSON) {
+    // draw incoming path from peer
+    path = new paper.Path({
+        segments: pathJSON,
+        strokeColor: 'black',
+    });
+
+    // update screen in 3D canvas
+    setTimeout(function() {
+        drawingTexture.needsUpdate = true;
+    }, 100);
 }

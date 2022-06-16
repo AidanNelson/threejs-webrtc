@@ -167,6 +167,7 @@ function initSocketConnection() {
   onUserDisconnected()
   onSignal()
   onPositions()
+  onPeerDrawPath()
 }
 
 function onNewUser (){
@@ -226,6 +227,13 @@ function onPositions(){
   // Update when one of the users moves in space
   mySocket.on("positions", (_clientProps) => {
     myScene.updateClientPositions(_clientProps);
+  });
+}
+
+function onPeerDrawPath(){
+  // Update when one of the users moves in space
+  mySocket.on("peerDrawPath", (path) => {
+    updateCanvas(path);
   });
 }
 
