@@ -67,10 +67,10 @@ window.onload = () => {
 };
 
 const handleForm = (userName, isStudent)=>{
-    mySocket.emit('addUsername', 
+    mySocket.emit('addUsername',
         {username: userName.value, isStudent}
-    , async (existingPeers)=> {          
-   
+    , async (existingPeers)=> {
+
         userForm.style.display = "none";
         // first get user media
         localMediaStream = await getMedia(mediaConstraints);
@@ -82,7 +82,11 @@ const handleForm = (userName, isStudent)=>{
         // then initialize socket connection
         initSocketConnection();
 
-        // create the threejs scene
+
+        console.log("init 2d canvas...");
+        initCanvas();
+
+          // create the threejs scene
         console.log("Creating three.js scene...");
         myScene = new Scene();
 
@@ -92,7 +96,7 @@ const handleForm = (userName, isStudent)=>{
         setInterval(function () {
           mySocket.emit("move", myScene.getPlayerPosition());
         }, 200);
-   
+
     });
 
 };
@@ -172,7 +176,7 @@ function onNewUser (){
 }
 
 function onRaiseHand(){
-//  mySocket.emit('addUsername', 
+//  mySocket.emit('addUsername',
 //  {username: userName.value, isStudent}
 //, async (existingPeers)=> {    })
 
@@ -314,7 +318,7 @@ function createControlElements(isStudent){
   reactIcon.setAttribute('height', 30);
   reactIcon.setAttribute('width', 30);
   reactIcon.addEventListener('click', ()=>{
-    
+
 
     if (emojisPanel.classList.contains('active')) {
       emojisPanel.classList.remove("active");
@@ -336,7 +340,7 @@ function createControlElements(isStudent){
       emojisPanel.style.padding = '20px';
 
       document.body.appendChild(emojisPanel);
-      
+
       emojisPanel.appendChild(smileEmojiIcon);
       smileEmojiIcon.addEventListener('click', ()=>{
         console.log('... clicked')
@@ -355,7 +359,7 @@ function createControlElements(isStudent){
   raiseHandIcon.addEventListener('click', ()=>{
 
     onRaiseHand()
-    
+
   })
 
   const smileEmojiIcon = document.createElement('img');
@@ -368,8 +372,8 @@ function createControlElements(isStudent){
   smileEmojiIcon.setAttribute('width', 30);
   smileEmojiIcon.addEventListener('click', ()=>{
 
-   // onReaction() 
-    
+   // onReaction()
+
   })
 
   const focusModeIcon = document.createElement('img');

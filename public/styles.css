@@ -1,7 +1,7 @@
 * {
     box-sizing: border-box;
   }
-  
+
   body {
     background-color: #f2f5ff;
     color: #31507d;
@@ -24,13 +24,33 @@
 video{
     display: none;
 }
+#screen{
+    position: relative;
+}
 #canvas-container{
     height: 100%;
 }
-canvas{
+#drawingCanvas{
+    position: absolute;
+    background-color: lightgray;
+    bottom: 20px;
+    right: 20px;
+    height: 300px;
+    width: 450px;
+    display: none;
+}
+#canvas-container canvas{
     height: 100%;
 }
-  
+
+#screen.showDrawBoard #drawingCanvas {
+    display: block;
+}
+#screen.showDrawBoard #canvas-container canvas {
+    height: 50%;
+}
+
+
   form {
     background-color: #fff;
     border-radius: 8px;

@@ -1,0 +1,89 @@
+
+let ctx;
+
+var path;
+var tool;
+
+function initCanvas() {
+    paper.setup('drawingCanvas');
+    tool = new Tool();
+    tool.onMouseDown = onMouseDown;
+    tool.onMouseDrag = onMouseDrag;
+    tool.onMouseUp = onMouseUp;
+
+    var path = new paper.Path();
+
+    var rect = new paper.Path.Rectangle({
+        point: [0, 0],
+        size: [view.size.width, view.size.height],
+        strokeColor: 'white',
+        selected: false
+    });
+    rect.sendToBack();
+    rect.fillColor = 'white';
+
+    // Give the stroke a color
+    // path.strokeColor = 'black';
+    // var start = new paper.Point(100, 100);
+    // // Move to start and draw a line from there
+    // path.moveTo(start);
+    // // Note that the plus operator on Point objects does not work
+    // // in JavaScript. Instead, we need to call the add() function:
+    // path.lineTo(start.add([ 200, -50 ]));
+    // Draw the view now:
+    paper.view.draw();
+
+
+    // let canvas = document.getElementById('drawingCanvas');
+    // ctx = canvas.getContext("2d");
+    // ctx.fillStyle = '#FFF';
+    // ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    // ctx.beginPath();
+    // ctx.arc(95, 50, 40, 0, 2 * Math.PI);
+    // ctx.stroke();
+}
+
+function onMouseDown(event) {
+    // If we produced a path before, deselect it:
+    if (path) {
+        path.selected = false;
+    }
+
+    // Create a new path and set its stroke color to black:
+    path = new Path({
+        segments: [event.point],
+        strokeColor: 'black',
+        // Select the path, so we can see its segment points:
+        fullySelected: true
+    });
+}
+
+// While the user drags the mouse, points are added to the path
+// at the position of the mouse:
+function onMouseDrag(event) {
+    path.add(event.point);
+
+    // Update the content of the text item to show how many
+    // segments it has:
+    // textItem.content = 'Segment count: ' + path.segments.length;
+}
+
+// When the mouse is released, we simplify the path:
+function onMouseUp(event) {
+    var segmentCount = path.segments.length;
+
+    // When the mouse is released, simplify it:
+    path.simplify(10);
+
+    // Select the path, so we can see its segments:
+    path.fullySelected = false;
+
+    setTimeout(function() {
+        drawingTexture.needsUpdate = true;
+    }, 100);
+
+    // var newSegmentCount = path.segments.length;
+    // var difference = segmentCount - newSegmentCount;
+    // var percentage = 100 - Math.round(newSegmentCount / segmentCount * 100);
+    // textItem.content = difference + ' of the ' + segmentCount + ' segments were removed. Saving ' + percentage + '%';
+}

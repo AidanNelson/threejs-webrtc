@@ -15,17 +15,24 @@
 	<script src="js/libs/three.min.js"></script>
 	<script src="js/libs/firstPersonControls.js"></script>
 	<script src="js/libs/simplepeer.min.js"></script>
+	<script src="js/libs/paper-full.min.js"></script>
+	<script type="application/javascript">
+		paper.install(window);
+	</script>
 
 	<script src="https://unpkg.com/three-spritetext"></script>
 	<script src="js/environment.js"></script>
 	<script src="js/scene.js"></script>
 	<script src="js/index.js"></script>
+	<script src="js/canvas.js"></script>
 
 </head>
 
 <body>
-
-	<div id="canvas-container"></div>
+	<div id="screen" class="showDrawBoard">
+		<canvas id="drawingCanvas"></canvas>
+		<div id="canvas-container"></div>
+	</div>
 
 	<form id="userForm">
 		<h1>3D Meeting Room</h1>
@@ -39,14 +46,13 @@
 			Start as Tutor
 			<i class='bx bx-right-arrow-alt'></i>
 			</button>
-			
+
 			<button type="submit" id="student">
 				Start as Student
 				<i class='bx bx-right-arrow-alt'></i>
 				</button>
 		</div>
 	  </form>
-
 </body>
 
 </html>
