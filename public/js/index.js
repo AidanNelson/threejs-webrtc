@@ -178,12 +178,8 @@ function onNewUser (){
 }
 
 function onHandRaised(){
-  mySocket.on("onHandRaised", (_clientProps) => {
-    console.log('onHandRaised ...', _clientProps)
-    /*for (let id in _clientProps) {
-      myScene.raiseHand(_clientProps, id);
-    }
-    */
+  mySocket.on("onHandRaised", (id) => {
+    myScene.raiseHand(id);
   });
 }
 

@@ -79,12 +79,18 @@ class Scene {
 
     let videoMaterial = makeVideoMaterial(id);
     let labelMaterial = makeLabelMaterial(username)
+    let handMaterial = makeHandMaterial()
     let otherMat = new THREE.MeshNormalMaterial();
 
     let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
 
     // set position of head before adding to parent object
     head.position.set(0, 0, 0);
+
+    // ADD HAND material to head
+    handMaterial.position.setX(1)
+    handMaterial.userData.socketId = id
+    head.add(handMaterial)
 
     // ADD TEXT material (label) to head
     labelMaterial.position.setY(1)
@@ -131,6 +137,18 @@ class Scene {
           clientProperties[id].rotation
       );
     }
+  }
+
+  raiseHand(id){
+      try{
+        this.scene.traverse(function(child){
+          if (child.userData.socketId == id) {  
+              child.visible = !child.visible
+          }
+         });
+       }catch(err){
+         console.error(err)
+       }
   }
 
   removeWhiteboardVideo(id) {
@@ -262,4 +280,11 @@ function makeVideoMaterial(id) {
 
 function makeLabelMaterial (username) {
   return new SpriteText(username || "Anonymous", 0.2);
+}
+
+function makeHandMaterial(){
+  const handTexture = new THREE.TextureLoader().load("../assets/raise-hand.png");
+  const myGeometry = new THREE.PlaneGeometry( 1, 1 )
+  const handMaterial = new THREE.MeshBasicMaterial( { map: handTexture } );
+  return  new THREE.Mesh(myGeometry, handMaterial);
 }

@@ -67,10 +67,10 @@ function setupSocketServer() {
     })
 
     function onRaiseHand(){
-      socket.on("onRaiseHand" , (data)=>{
+      socket.on("onRaiseHand" , (id)=>{
           try{
-            peers[data].handRaised = true
-            io.emit("onHandRaised", peers);
+            peers[id].handRaised = true
+            io.emit("onHandRaised", id);
           }catch(err){
             console.error(err)
           }
