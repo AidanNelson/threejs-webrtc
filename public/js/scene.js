@@ -8,7 +8,7 @@
 
 
 class Scene {
-  constructor() {
+  constructor(isStudent=false) {
     //THREE scene
     this.scene = new THREE.Scene();
 
@@ -26,8 +26,11 @@ class Scene {
       0.1,
       5000
     );
-    this.camera.position.set(0, 3, 6);
-    this.scene.add(this.camera);
+    this.isStudent = isStudent
+
+    const {x,y} =  this.getRandomPositionInsideCircle()
+    const cameraPosition = isStudent ? this.camera.position.set(0, 3, 6) : this.camera.position.set(x, 3, y);
+    this.scene.add(cameraPosition);
 
     // create an AudioListener and add it to the camera
     this.listener = new THREE.AudioListener();
@@ -76,17 +79,19 @@ class Scene {
 
   // add a client meshes, a video element and  canvas for three.js video texture
   addClient(id, username, peers) {
-
+    console.log("HEEEY", username)
     let videoMaterial = makeVideoMaterial(id);
     let labelMaterial = makeLabelMaterial(username)
     let handMaterial = makeHandMaterial()
     let emojiMaterial = makeEmojiMaterial()
     let otherMat = new THREE.MeshNormalMaterial();
 
-    let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
+    let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.2), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
+    let body = new THREE.Mesh(new THREE.SphereGeometry( 0.7, 32, 16 ), otherMat);
 
     // set position of head before adding to parent object
-    head.position.set(0, 0, 0);
+    head.position.set(0, 0.3, 0);
+    body.position.set(0, -0.8, 0);
 
     // ADD HAND material to head
     handMaterial.position.setX(1)
@@ -107,6 +112,7 @@ class Scene {
     // https://threejs.org/docs/index.html#api/en/objects/Group
     var group = new THREE.Group();
     group.add(head);
+    group.add(body);
 
     // add group to scene
     this.scene.add(group);
@@ -114,9 +120,9 @@ class Scene {
     peers[id].group = group;
     peers[id].videoMaterial = videoMaterial;
 
-    peers[id].previousPosition = new THREE.Vector3();
+    peers[id].previousPosition = new THREE.Vector3(0, 0,0);
     peers[id].previousRotation = new THREE.Quaternion();
-    peers[id].desiredPosition = new THREE.Vector3();
+    peers[id].desiredPosition = new THREE.Vector3(0, 0,0);
     peers[id].desiredRotation = new THREE.Quaternion();
     return peers
   }
@@ -132,6 +138,14 @@ class Scene {
     for (let id in clientProperties) {
       this.drawAvatar(clientProperties, id);
     }
+  }
+
+  getRandomPositionInsideCircle(){
+    const r = RAD * Math.sqrt(Math.random())
+    const theta = Math.random() * 2 * Math.PI
+    const x = r * Math.cos(theta)
+    const y = PRESENTATION_CENTER_X + r * Math.sin(theta)
+    return {x,y}
   }
 
   drawAvatar(clientProperties, id) {
@@ -191,7 +205,7 @@ class Scene {
         const geometry = new THREE.BoxGeometry(5, 5, 0.5);
         const materialBlack = new THREE.MeshBasicMaterial({color: 0x000000});
         const whiteboard = new THREE.Mesh(geometry, [materialBlack, materialBlack, materialBlack, materialBlack, peers[id].videoMaterial, materialBlack]);
-        whiteboard.position.set(15, 17 - 6 * i, -15)
+        whiteboard.position.set(15, 17 - 6 * i, -25)
         this.scene.add(whiteboard);
 
         if (peers[id].whiteboard) {
@@ -310,7 +324,7 @@ function makeLabelMaterial (username) {
 
 function makeHandMaterial(){
   const handTexture = new THREE.TextureLoader().load("../assets/raise-hand.png");
-  const myGeometry = new THREE.PlaneGeometry( 1, 1 )
+  const myGeometry = new THREE.BoxGeometry( .40, .40, .40 );
   const handMaterial = new THREE.MeshBasicMaterial( { map: handTexture } );
   return  new THREE.Mesh(myGeometry, handMaterial);
 }

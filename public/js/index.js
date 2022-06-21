@@ -92,7 +92,7 @@ const handleForm = (userName, isStudent)=>{
 
           // create the threejs scene
         console.log("Creating three.js scene...");
-        myScene = new Scene();
+        myScene = new Scene(isStudent);
 
         processExistingPeers(existingPeers)
 
@@ -419,6 +419,27 @@ function createControlElements(isStudent){
     console.log('... clicked')
   })
 
+  const drawBoardIcon = document.createElement('img');
+  drawBoardIcon.setAttribute('src', '../assets/showDrawBoard.svg');
+  drawBoardIcon.setAttribute('alt', 'Show Drawing Board');
+  drawBoardIcon.setAttribute('height', 30);
+  drawBoardIcon.setAttribute('width', 30);
+  drawBoardIcon.addEventListener('click', () => {
+    const drawBoard = document.getElementById('screen');
+
+    if (drawBoard.getAttribute('class') === 'showDrawBoard') {
+      console.log("hiding draw board");
+      drawBoard.removeAttribute('class');
+      drawBoardIcon.setAttribute('src', '../assets/showDrawBoard.svg');
+      drawBoardIcon.setAttribute('alt', 'Show Drawing Board');
+    } else {
+      console.log("showing draw board");
+      drawBoardIcon.setAttribute('src', '../assets/hideDrawBoard.svg');
+      drawBoardIcon.setAttribute('alt', 'Hide Drawing Board');
+      drawBoard.setAttribute('class', 'showDrawBoard');
+    }
+  })
+
   if (!isStudent){
     box.appendChild(focusModeIcon);
     box.appendChild(reactIcon);
@@ -426,6 +447,8 @@ function createControlElements(isStudent){
     box.appendChild(raiseHandIcon);
     box.appendChild(reactIcon);
   }
+  box.appendChild(drawBoardIcon);
+
   document.body.appendChild(box);
 }
 
