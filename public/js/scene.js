@@ -94,6 +94,7 @@ class Scene {
 
     // ADD HAND material to head
     handMaterial.position.setX(1)
+    handMaterial.position.setY(1)
     handMaterial.userData.socketId = id
     head.add(handMaterial)
 
