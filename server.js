@@ -59,6 +59,7 @@ function setupSocketServer() {
       newUser()
       onMove()
       onRaiseHand()
+      receiveReaction()
       emitPositons()
       onSignal()
       onDisconnect()
@@ -74,6 +75,14 @@ function setupSocketServer() {
           }catch(err){
             console.error(err)
           }
+      })
+    }
+
+    function receiveReaction(){
+      socket.on("receiveReaction" , (data)=>{
+        const {id, reactionType} = data;
+        console.log('.....',data)
+        io.emit("spreadReaction", {id, reactionType});
       })
     }
 

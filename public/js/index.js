@@ -18,6 +18,10 @@ let peers = {};
 // Variable to store our three.js scene:
 let myScene;
 
+const reactions = {
+  'SMILE':'Smile'
+}
+
 // set video width / height / framerate here:
 const videoWidth = 80;
 const videoHeight = 60;
@@ -169,6 +173,20 @@ function initSocketConnection() {
   onPositions()
   onPeerDrawPath()
   onHandRaised()
+  spreadReaction()
+}
+
+function emitReaction(id, reactionType){
+  console.log('click 2')
+  mySocket.emit('receiveReaction', {id, reactionType})
+}
+
+function spreadReaction(){
+  
+  mySocket.on("spreadReaction", (obj) => {
+    console.log('client received  reaction', obj)
+      myScene.handleReaction(obj)
+  });
 }
 
 function onNewUser (){
@@ -355,7 +373,8 @@ function createControlElements(isStudent){
 
       emojisPanel.appendChild(smileEmojiIcon);
       smileEmojiIcon.addEventListener('click', ()=>{
-        console.log('... clicked')
+        console.log('click')
+        emitReaction(mySocket.id, reactions.SMILE)
       })
     }
   })
