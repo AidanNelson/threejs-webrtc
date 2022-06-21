@@ -142,7 +142,7 @@ class Scene {
   raiseHand(id){
       try{
         this.scene.traverse(function(child){
-          if (child.userData.socketId == id) {  
+          if (child.userData.socketId == id) {
               child.visible = !child.visible
           }
          });
@@ -165,7 +165,7 @@ class Scene {
         const geometry = new THREE.BoxGeometry(5, 5, 0.5);
         const materialBlack = new THREE.MeshBasicMaterial({color: 0x000000});
         const whiteboard = new THREE.Mesh(geometry, [materialBlack, materialBlack, materialBlack, materialBlack, peers[id].videoMaterial, materialBlack]);
-        whiteboard.position.set(15, 17 - 6 * i, -15)
+        whiteboard.position.set(15, 17 - 6 * i, -25)
         this.scene.add(whiteboard);
 
         if (peers[id].whiteboard) {
