@@ -8,7 +8,7 @@
 
 
 class Scene {
-  constructor() {
+  constructor(isStudent=false) {
     //THREE scene
     this.scene = new THREE.Scene();
 
@@ -26,8 +26,11 @@ class Scene {
       0.1,
       5000
     );
-    this.camera.position.set(0, 3, 6);
-    this.scene.add(this.camera);
+    this.isStudent = isStudent
+
+    const {x,y} =  this.getRandomPositionInsideCircle()
+    const cameraPosition = isStudent ? this.camera.position.set(0, 3, 6) : this.camera.position.set(x, 3, y);
+    this.scene.add(cameraPosition);
 
     // create an AudioListener and add it to the camera
     this.listener = new THREE.AudioListener();
@@ -76,7 +79,7 @@ class Scene {
 
   // add a client meshes, a video element and  canvas for three.js video texture
   addClient(id, username, peers) {
-
+    console.log("HEEEY")
     let videoMaterial = makeVideoMaterial(id);
     let labelMaterial = makeLabelMaterial(username)
     let handMaterial = makeHandMaterial()
@@ -106,9 +109,9 @@ class Scene {
     peers[id].group = group;
     peers[id].videoMaterial = videoMaterial;
 
-    peers[id].previousPosition = new THREE.Vector3();
+    peers[id].previousPosition = new THREE.Vector3(0, 0,0);
     peers[id].previousRotation = new THREE.Quaternion();
-    peers[id].desiredPosition = new THREE.Vector3();
+    peers[id].desiredPosition = new THREE.Vector3(0, 0,0);
     peers[id].desiredRotation = new THREE.Quaternion();
     return peers
   }
@@ -124,6 +127,14 @@ class Scene {
     for (let id in clientProperties) {
       this.drawAvatar(clientProperties, id);
     }
+  }
+
+  getRandomPositionInsideCircle(){
+    const r = RAD * Math.sqrt(Math.random())
+    const theta = Math.random() * 2 * Math.PI
+    const x = r * Math.cos(theta)
+    const y = PRESENTATION_CENTER_X + r * Math.sin(theta)
+    return {x,y}
   }
 
   drawAvatar(clientProperties, id) {

@@ -88,7 +88,7 @@ const handleForm = (userName, isStudent)=>{
 
           // create the threejs scene
         console.log("Creating three.js scene...");
-        myScene = new Scene();
+        myScene = new Scene(isStudent);
 
         processExistingPeers(existingPeers)
 

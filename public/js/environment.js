@@ -1,4 +1,6 @@
 let myMesh;
+const RAD = 5
+const PRESENTATION_CENTER_X = -5
 
 function createEnvironment(scene) {
   console.log("Adding environment");
@@ -19,7 +21,7 @@ function whiteBoard(scene) {
 }
 
 function presentationArea(scene) {
-  const geometry = new THREE.CylinderGeometry( 5, 5, 0.2, 30, 1, false );
+  const geometry = new THREE.CylinderGeometry( RAD, RAD, 0.2, 30, 1, false );
   const material = new THREE.MeshBasicMaterial( {color: 0x442211} );
   const area = new THREE.Mesh( geometry, material );
   area.position.set(0,0.1, -5)
