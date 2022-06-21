@@ -79,16 +79,18 @@ class Scene {
 
   // add a client meshes, a video element and  canvas for three.js video texture
   addClient(id, username, peers) {
-    console.log("HEEEY")
+    console.log("HEEEY", username)
     let videoMaterial = makeVideoMaterial(id);
     let labelMaterial = makeLabelMaterial(username)
     let handMaterial = makeHandMaterial()
     let otherMat = new THREE.MeshNormalMaterial();
 
-    let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
+    let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.2), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
+    let body = new THREE.Mesh(new THREE.SphereGeometry( 0.7, 32, 16 ), otherMat);
 
     // set position of head before adding to parent object
-    head.position.set(0, 0, 0);
+    head.position.set(0, 0.3, 0);
+    body.position.set(0, -0.8, 0);
 
     // ADD HAND material to head
     handMaterial.position.setX(1)
@@ -102,6 +104,7 @@ class Scene {
     // https://threejs.org/docs/index.html#api/en/objects/Group
     var group = new THREE.Group();
     group.add(head);
+    group.add(body);
 
     // add group to scene
     this.scene.add(group);
