@@ -295,7 +295,7 @@ function makeLabelMaterial (username) {
 
 function makeHandMaterial(){
   const handTexture = new THREE.TextureLoader().load("../assets/raise-hand.png");
-  const myGeometry = new THREE.PlaneGeometry( 1, 1 )
+  const myGeometry = new THREE.BoxGeometry( .40, .40, .40 );
   const handMaterial = new THREE.MeshBasicMaterial( { map: handTexture } );
   return  new THREE.Mesh(myGeometry, handMaterial);
 }
