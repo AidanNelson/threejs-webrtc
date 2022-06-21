@@ -17,6 +17,7 @@ let peers = {};
 
 // Variable to store our three.js scene:
 let myScene;
+let drawBoard;
 
 // set video width / height / framerate here:
 const videoWidth = 80;
@@ -58,17 +59,17 @@ window.onload = () => {
 
    startAsStudent.onclick = (e)=> {
     e.preventDefault()
-    handleForm(userName, true)
+    handleForm(userName.value, true)
     }
    startAsTutor.onclick = (e)=> {
      e.preventDefault()
-     handleForm(userName, false)
+     handleForm(userName.value, false)
     }
 };
 
 const handleForm = (userName, isStudent)=>{
     mySocket.emit('addUsername',
-        {username: userName.value, isStudent}
+        {userName, isStudent}
     , async (existingPeers)=> {
 
         userForm.style.display = "none";
@@ -82,11 +83,9 @@ const handleForm = (userName, isStudent)=>{
         // then initialize socket connection
         initSocketConnection();
 
+        drawBoard = new DrawingBoard('drawingCanvas');
 
-        console.log("init 2d canvas...");
-        initCanvas();
-
-          // create the threejs scene
+        // create the threejs scene
         console.log("Creating three.js scene...");
         myScene = new Scene(isStudent);
 
@@ -237,7 +236,7 @@ function onPositions(){
 function onPeerDrawPath(){
   // Update when one of the users moves in space
   mySocket.on("peerDrawPath", (path) => {
-    updateCanvas(path);
+    drawBoard.updateCanvas(path);
   });
 }
 
@@ -366,8 +365,8 @@ function createControlElements(isStudent){
     '../assets/open-hand.png',
   );
   raiseHandIcon.setAttribute('alt', 'Raise Hand');
-  raiseHandIcon.setAttribute('height', 30);
-  raiseHandIcon.setAttribute('width', 30);
+  raiseHandIcon.setAttribute('height', 32);
+  raiseHandIcon.setAttribute('width', 32);
   raiseHandIcon.addEventListener('click', ()=>{
 
     onRaiseHand()
@@ -380,8 +379,8 @@ function createControlElements(isStudent){
     '../assets/smile.png',
   );
   smileEmojiIcon.setAttribute('alt', 'Smile Emoji');
-  smileEmojiIcon.setAttribute('height', 30);
-  smileEmojiIcon.setAttribute('width', 30);
+  smileEmojiIcon.setAttribute('height', 32);
+  smileEmojiIcon.setAttribute('width', 32);
   smileEmojiIcon.addEventListener('click', ()=>{
 
    // onReaction()
@@ -394,8 +393,8 @@ function createControlElements(isStudent){
     '../assets/target.png',
   );
   focusModeIcon.setAttribute('alt', 'Focus Mode');
-  focusModeIcon.setAttribute('height', 50);
-  focusModeIcon.setAttribute('width', 50);
+  focusModeIcon.setAttribute('height', 32);
+  focusModeIcon.setAttribute('width', 32);
   focusModeIcon.addEventListener('click', ()=>{
     console.log('... clicked')
   })
@@ -403,8 +402,8 @@ function createControlElements(isStudent){
   const drawBoardIcon = document.createElement('img');
   drawBoardIcon.setAttribute('src', '../assets/showDrawBoard.svg');
   drawBoardIcon.setAttribute('alt', 'Show Drawing Board');
-  drawBoardIcon.setAttribute('height', 30);
-  drawBoardIcon.setAttribute('width', 30);
+  drawBoardIcon.setAttribute('height', 32);
+  drawBoardIcon.setAttribute('width', 32);
   drawBoardIcon.addEventListener('click', () => {
     const drawBoard = document.getElementById('screen');
 

@@ -3,15 +3,13 @@ const RAD = 5
 const PRESENTATION_CENTER_X = -5
 
 function createEnvironment(scene) {
-  console.log("Adding environment");
-
   presentationArea(scene)
   whiteBoard(scene)
 }
 
 function whiteBoard(scene) {
   const geometry = new THREE.BoxGeometry( 22, 12, 0.5 );
-  const materialWhite = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+  // const materialWhite = new THREE.MeshBasicMaterial( {color: 0xffffff} );
   const materialBlack = new THREE.MeshBasicMaterial( {color: 0x000000} );
   const canvasMaterial = getCanvasMaterial();
   const whiteboard = new THREE.Mesh( geometry, [materialBlack,materialBlack,materialBlack,materialBlack,canvasMaterial,materialBlack] );
@@ -22,9 +20,9 @@ function whiteBoard(scene) {
 
 function presentationArea(scene) {
   const geometry = new THREE.CylinderGeometry( RAD, RAD, 0.2, 30, 1, false );
-  const material = new THREE.MeshBasicMaterial( {color: 0x442211} );
+  const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
   const area = new THREE.Mesh( geometry, material );
-  area.position.set(0,0.1, -5)
+  area.position.set(0,0, -5)
   scene.add( area );
 }
 
