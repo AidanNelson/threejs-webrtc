@@ -33,10 +33,10 @@ video{
 #drawingCanvas{
     position: absolute;
     background-color: lightgray;
+    border: solid black;
+
     bottom: 20px;
     right: 20px;
-    height: 300px;
-    width: 450px;
     display: none;
 }
 #canvas-container canvas{
