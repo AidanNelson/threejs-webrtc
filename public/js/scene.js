@@ -29,8 +29,8 @@ class Scene {
     this.isStudent = isStudent
 
     const {x,y} =  this.getRandomPositionInsideCircle()
-    const cameraPosition = isStudent ? this.camera.position.set(0, 3, 6) : this.camera.position.set(x, 3, y);
-    this.scene.add(cameraPosition);
+    isStudent ? this.camera.position.set(0, 3, 6) : this.camera.position.set(x, 3, y);
+    this.scene.add(this.camera);
 
     // create an AudioListener and add it to the camera
     this.listener = new THREE.AudioListener();
