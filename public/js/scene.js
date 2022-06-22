@@ -104,6 +104,7 @@ class Scene {
     handMaterial.position.setX(1)
     handMaterial.userData.socketId = id;
     handMaterial.userData.objectType = "hand";
+    handMaterial.visible = false;
     head.add(handMaterial)
 
     // ADD EMOJI material to head
