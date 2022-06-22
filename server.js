@@ -143,7 +143,6 @@ function setupSocketServer() {
     function onDrawPath(){
     //Handle the drawing of paths
     socket.on("drawPath", (data) => {
-        console.log("emit peerDrawPath", data);
       io.sockets.emit("peerDrawPath", data);
     });
     }
