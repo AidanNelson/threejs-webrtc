@@ -288,6 +288,14 @@ class Scene {
     ];
   }
 
+  setPlayerPositionToCenter() {
+    if (this.isStudent) {
+      this.disableMove=true
+      this.camera.position.set(0, 0.5, 0)
+      this.camera.quaternion.set(0,0, 0, 1)
+    }
+  }
+  
   //////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
   // Rendering 🎥

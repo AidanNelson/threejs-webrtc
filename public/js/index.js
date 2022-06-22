@@ -190,6 +190,7 @@ function initSocketConnection() {
   onPeerDrawPath()
   onHandRaised()
   spreadReaction()
+  onFocused()
 }
 
 function emitReaction(id, reaction){
@@ -219,6 +220,17 @@ function onHandRaised(){
 
 function onRaiseHand(){
   mySocket.emit('onRaiseHand', mySocket.id)
+}
+
+function onFocus(){
+  mySocket.emit('focusMode');
+}
+
+function onFocused(){
+  // Update when one of the users moves in space
+  mySocket.on("focused", () => {
+    myScene.setPlayerPositionToCenter()
+  });
 }
 
 function onUserDisconnected(){
@@ -431,7 +443,7 @@ function createControlElements(isStudent){
   focusModeIcon.setAttribute('height', 32);
   focusModeIcon.setAttribute('width', 32);
   focusModeIcon.addEventListener('click', ()=>{
-    console.log('... clicked')
+    onFocus()
   })
 
   const drawBoardIcon = document.createElement('img');

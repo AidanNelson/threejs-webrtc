@@ -53,7 +53,8 @@ function setupSocketServer() {
         position: [0, 0.5, 0],
         rotation: [0, 0, 0, 1], // stored as XYZW values of Quaternion
         isStudent,
-        handRaised:false
+        handRaised:false,
+        disableMove:false
       };
 
       newUser()
@@ -64,6 +65,7 @@ function setupSocketServer() {
       onSignal()
       onDisconnect()
       onDrawPath()
+      onFocus()
       callback(peers);
     })
 
@@ -94,7 +96,8 @@ function setupSocketServer() {
     function onMove(){
       // whenever the client moves, update their movements in the clients object
       socket.on("move", (data) => {
-        if (peers[socket.id]) {
+        //console.log("==> "+socket.id+" : "+peers[socket.id].disableMove)
+        if (peers[socket.id] && !peers[socket.id].disableMove) {
           peers[socket.id].position = data[0];
           peers[socket.id].rotation = data[1];
         }
@@ -145,6 +148,13 @@ function setupSocketServer() {
     socket.on("drawPath", (data) => {
       io.sockets.emit("peerDrawPath", data);
     });
+    }
+
+    function onFocus(){
+      // Handle the focus mode event
+      socket.on("focusMode", () => {
+        io.sockets.emit("focused");
+      });
     }
   });
 }
