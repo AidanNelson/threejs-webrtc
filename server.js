@@ -80,9 +80,8 @@ function setupSocketServer() {
 
     function receiveReaction(){
       socket.on("receiveReaction" , (data)=>{
-        const {id, reactionType} = data;
-        console.log('.....',data)
-        io.emit("spreadReaction", {id, reactionType});
+        const {id, reaction} = data;
+        io.emit("spreadReaction", {id, reaction});
       })
     }
 

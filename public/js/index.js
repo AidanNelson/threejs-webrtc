@@ -19,7 +19,24 @@ let peers = {};
 let myScene;
 
 const reactions = {
-  'SMILE':'Smile'
+  THUMBS_UP:{
+    reactionFile: 'thumbs-up.svg'
+  },
+  LAUGH:{
+    reactionFile: ''
+  },
+  TICK:{
+    reactionFile: ''
+  },
+  CROSS:{
+    reactionFile: ''
+  },
+  HEART:{
+    reactionFile: ''
+  },
+  CLAP:{
+    reactionFile: ''
+  }
 }
 
 // set video width / height / framerate here:
@@ -176,9 +193,9 @@ function initSocketConnection() {
   spreadReaction()
 }
 
-function emitReaction(id, reactionType){
-  console.log('click 2')
-  mySocket.emit('receiveReaction', {id, reactionType})
+function emitReaction(id, reaction){
+  console.log('click 2', reaction)
+  mySocket.emit('receiveReaction', {id, reaction})
 }
 
 function spreadReaction(){
@@ -373,8 +390,7 @@ function createControlElements(isStudent){
 
       emojisPanel.appendChild(smileEmojiIcon);
       smileEmojiIcon.addEventListener('click', ()=>{
-        console.log('click')
-        emitReaction(mySocket.id, reactions.SMILE)
+        emitReaction(mySocket.id, reactions.THUMBS_UP)
       })
     }
   })

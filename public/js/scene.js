@@ -12,6 +12,8 @@ class Scene {
     //THREE scene
     this.scene = new THREE.Scene();
 
+    
+
     //Utility
     this.width = window.innerWidth;
     this.height = window.innerHeight; // * 0.9;
@@ -83,7 +85,7 @@ class Scene {
     let videoMaterial = makeVideoMaterial(id);
     let labelMaterial = makeLabelMaterial(username)
     let handMaterial = makeHandMaterial()
-    let emojiMaterial = makeEmojiMaterial()
+    //let emojiMaterial = makeEmojiMaterial()
     let otherMat = new THREE.MeshNormalMaterial();
 
     let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.2), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
@@ -91,19 +93,27 @@ class Scene {
 
     // set position of head before adding to parent object
     head.position.set(0, 0.3, 0);
+    head.userData.socketId = id;
+    head.userData.objectType = "head";
+
     body.position.set(0, -0.8, 0);
+    body.userData.socketId = id;
+    body.userData.objectType = "body";
 
     // ADD HAND material to head
     handMaterial.position.setX(1)
     handMaterial.userData.socketId = id;
-    handMaterial.userData.objectType == "hand";
+    handMaterial.userData.objectType = "hand";
     head.add(handMaterial)
 
     // ADD EMOJI material to head
+    /*
     emojiMaterial.position.setX(-1)
     emojiMaterial.userData.socketId = id;
-    emojiMaterial.userData.objectType == "emoji";
+    emojiMaterial.userData.objectType = "emoji";
+    console.log('EMOJI MAT', emojiMaterial)
     head.add(emojiMaterial)
+    */
 
     // ADD TEXT material (label) to head
     labelMaterial.position.setY(1)
@@ -174,14 +184,26 @@ class Scene {
   }
 
   handleReaction(obj){
-    const {id, reactionType} = obj;
-    console.log('...', obj)
+    const {id, reaction} = obj;
+ 
     try{
       this.scene.traverse(function(child){
-        if (child.userData.socketId == id && child.userData.objectType == "emoji") {  
-            // animate up and fade
 
-            
+        if (child.userData.socketId == id && child.userData.objectType == "head") { 
+          
+            // add hand to head 
+            const mesh = makeEmojiMaterial(reaction.reactionFile)
+            mesh.position.setX(-1)
+            mesh.userData.socketId = id;
+            mesh.userData.objectType = "emoji";
+            child.add(mesh)
+            // animate, TODO: fade out (opacity)
+            animate()
+
+            function animate(){
+              requestAnimationFrame(animate)
+              mesh.position.y += 0.01;              
+            }
         }
        });
 
@@ -329,9 +351,9 @@ function makeHandMaterial(){
   return  new THREE.Mesh(myGeometry, handMaterial);
 }
 
-function makeEmojiMaterial(){
-  const emojiTexture = new THREE.TextureLoader().load("../assets/noto-v1_thumbs-up.svg");
-  const myGeometry = new THREE.PlaneGeometry( 1, 1 )
+function makeEmojiMaterial(file){
+  const emojiTexture = new THREE.TextureLoader().load(`../assets/${file}`);
+  const myGeometry = new THREE.BoxGeometry( .40, .40, .40 );
   const emojiMaterial = new THREE.MeshBasicMaterial( { map: emojiTexture } );
-  return  new THREE.Mesh(myGeometry, emojiMaterial);
+  return new THREE.Mesh(myGeometry, emojiMaterial)
 }
