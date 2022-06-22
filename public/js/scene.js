@@ -197,13 +197,17 @@ class Scene {
             mesh.userData.socketId = id;
             mesh.userData.objectType = "emoji";
             child.add(mesh)
+
             // animate, TODO: fade out (opacity)
             animate()
-
             function animate(){
               requestAnimationFrame(animate)
-              mesh.position.y += 0.01;              
+              mesh.position.y += 0.05;
             }
+            // remove emoji
+            setTimeout(()=>{
+              child.remove(mesh)
+            }, 3000)
         }
        });
 
