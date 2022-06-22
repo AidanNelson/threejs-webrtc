@@ -376,6 +376,7 @@ function createControlElements(isStudent){
     } else {
       emojisPanel.classList.remove("disable");
       emojisPanel.classList.add("active");
+      emojisPanel.classList.remove("hidden");
       smileEmojiIcon.addEventListener('click', ()=>{
         emitReaction(mySocket.id, reactions.THUMBS_UP)
       })
