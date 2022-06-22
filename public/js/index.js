@@ -356,104 +356,45 @@ function onPlayerMove() {
 // Utilities 🚂
 
 function createControlElements(isStudent){
-  const box = document.createElement('div');
-  box.style.position = 'fixed';
-  box.style.bottom = '20px';
-  box.style.left = '10px';
-  box.style.width = '250px';
-  box.style.height = '50px';
-  box.style.backgroundColor = 'white';
-  box.style.padding = '7px';
+  document.getElementById('controlsBox').classList.remove('hidden')
+  document.getElementById('controlsBox').classList.add('shown-f')
+  document.getElementById('emojisPanel').classList.remove('hidden')
+  document.getElementById('emojisPanel').classList.add('active')
 
-  const emojisPanel = document.createElement('div');
+  const reactIcon = document.getElementById('reactIcon')
+  const focusModeIcon = document.getElementById('focusModeIcon')
+  const drawBoardIcon = document.getElementById('drawBoardIcon');
+  const emojisPanel = document.getElementById('emojisPanel');
+  const smileEmojiIcon = document.getElementById('smileEmojiIcon');
+  const raiseHandIcon = document.getElementById('raiseHandIcon')
 
-  const reactIcon = document.createElement('img');
-  reactIcon.setAttribute(
-    'src',
-    '../assets/thumbs-up.png',
-  );
-  reactIcon.setAttribute('alt', 'Reactions');
-  reactIcon.setAttribute('height', 30);
-  reactIcon.setAttribute('width', 30);
   reactIcon.addEventListener('click', ()=>{
-
-
     if (emojisPanel.classList.contains('active')) {
       emojisPanel.classList.remove("active");
       emojisPanel.classList.add("disable");
-
-      emojisPanel.style.display = 'none';
-
+      emojisPanel.classList.add("hidden");
     } else {
       emojisPanel.classList.remove("disable");
       emojisPanel.classList.add("active");
-
-      emojisPanel.style.display = 'block';
-      emojisPanel.style.position = 'fixed';
-      emojisPanel.style.bottom = '77px';
-      emojisPanel.style.left = '10px';
-      emojisPanel.style.width = '180px';
-      emojisPanel.style.height = '50px';
-      emojisPanel.style.backgroundColor = 'white';
-      emojisPanel.style.padding = '20px';
-
-      document.body.appendChild(emojisPanel);
-
-      emojisPanel.appendChild(smileEmojiIcon);
       smileEmojiIcon.addEventListener('click', ()=>{
         emitReaction(mySocket.id, reactions.THUMBS_UP)
       })
     }
   })
-
-  const raiseHandIcon = document.createElement('img');
-  raiseHandIcon.setAttribute(
-    'src',
-    '../assets/open-hand.png',
-  );
-  raiseHandIcon.setAttribute('alt', 'Raise Hand');
-  raiseHandIcon.setAttribute('height', 32);
-  raiseHandIcon.setAttribute('width', 32);
   raiseHandIcon.addEventListener('click', ()=>{
-
     onRaiseHand()
-
   })
 
-  const smileEmojiIcon = document.createElement('img');
-  smileEmojiIcon.setAttribute(
-    'src',
-    '../assets/smile.png',
-  );
-  smileEmojiIcon.setAttribute('alt', 'Smile Emoji');
-  smileEmojiIcon.setAttribute('height', 32);
-  smileEmojiIcon.setAttribute('width', 32);
   smileEmojiIcon.addEventListener('click', ()=>{
-
    // onReaction()
-
   })
 
-  const focusModeIcon = document.createElement('img');
-  focusModeIcon.setAttribute(
-    'src',
-    '../assets/target.png',
-  );
-  focusModeIcon.setAttribute('alt', 'Focus Mode');
-  focusModeIcon.setAttribute('height', 32);
-  focusModeIcon.setAttribute('width', 32);
   focusModeIcon.addEventListener('click', ()=>{
     onFocus()
   })
 
-  const drawBoardIcon = document.createElement('img');
-  drawBoardIcon.setAttribute('src', '../assets/showDrawBoard.svg');
-  drawBoardIcon.setAttribute('alt', 'Show Drawing Board');
-  drawBoardIcon.setAttribute('height', 32);
-  drawBoardIcon.setAttribute('width', 32);
   drawBoardIcon.addEventListener('click', () => {
     const drawBoard = document.getElementById('screen');
-
     if (drawBoard.getAttribute('class') === 'showDrawBoard') {
       console.log("hiding draw board");
       drawBoard.removeAttribute('class');
@@ -468,15 +409,12 @@ function createControlElements(isStudent){
   })
 
   if (!isStudent){
-    box.appendChild(focusModeIcon);
-    box.appendChild(reactIcon);
+    raiseHandIcon.classList.add('hidden');
+    focusModeIcon.classList.add('shown');
   }else{
-    box.appendChild(raiseHandIcon);
-    box.appendChild(reactIcon);
+    focusModeIcon.classList.add('hidden');
+    raiseHandIcon.classList.add('shown');
   }
-  box.appendChild(drawBoardIcon);
-
-  document.body.appendChild(box);
 }
 
 // created <video> element for local mediastream

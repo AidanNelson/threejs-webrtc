@@ -138,3 +138,38 @@ video{
   form button[type=submit] i {
     margin-left: 5px;
   }
+
+  #controlsBox {
+    position: fixed;
+    bottom: 20px;
+    left: 10px;
+    width: 250px;
+    height: 50px;
+    background-color: #ffff;
+    padding: 7px;
+    justify-content: space-around;
+  }
+
+  .active {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    bottom: 77px;
+    left: 10px;
+    width: 180px;
+    height: 50px;
+    background-color: #fff;
+    padding:20px;
+  }
+
+  .shown {
+    display:block;
+  }
+
+  .shown-f {
+    display:flex;
+  }
+
+  .hidden {
+    display:none
+  }
