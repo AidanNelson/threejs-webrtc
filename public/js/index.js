@@ -24,19 +24,22 @@ const reactions = {
     reactionFile: 'thumbs-up.svg'
   },
   LAUGH:{
-    reactionFile: ''
+    reactionFile: 'laughing.svg'
   },
-  TICK:{
-    reactionFile: ''
+  CHECK_MARK:{
+    reactionFile: 'check-mark-button.svg'
   },
-  CROSS:{
-    reactionFile: ''
+  CROSS_MARK:{
+    reactionFile: 'cross-mark.svg'
   },
-  HEART:{
-    reactionFile: ''
+  RED_HEART:{
+    reactionFile: 'red-heart.svg'
+  },
+  RED_QUESTION_MARK:{
+    reactionFile: 'red-question-mark.svg'
   },
   CLAP:{
-    reactionFile: ''
+    reactionFile: 'clapping-hands.svg'
   }
 }
 
@@ -358,15 +361,21 @@ function onPlayerMove() {
 function createControlElements(isStudent){
   document.getElementById('controlsBox').classList.remove('hidden')
   document.getElementById('controlsBox').classList.add('shown-f')
-  document.getElementById('emojisPanel').classList.remove('hidden')
-  document.getElementById('emojisPanel').classList.add('active')
 
   const reactIcon = document.getElementById('reactIcon')
   const focusModeIcon = document.getElementById('focusModeIcon')
   const drawBoardIcon = document.getElementById('drawBoardIcon');
   const emojisPanel = document.getElementById('emojisPanel');
-  const smileEmojiIcon = document.getElementById('smileEmojiIcon');
-  const raiseHandIcon = document.getElementById('raiseHandIcon')
+  const raiseHandIcon = document.getElementById('raiseHandIcon');
+
+  // reactions
+  const checkMarkIcon = document.getElementById('checkMarkIcon');
+  const clappingHandsEmojiIcon = document.getElementById('clappingHandsEmojiIcon');
+  const crossMarkEmoji = document.getElementById('crossMarkEmoji');
+  const redHeartEmoji = document.getElementById('redHeartEmoji');
+  const redQuestionEmoji = document.getElementById('redQuestionEmoji');
+  const laughingEmoji = document.getElementById('laughingEmoji');
+  const thumbsUpEmoji = document.getElementById('thumbsUpEmoji');
 
   reactIcon.addEventListener('click', ()=>{
     if (emojisPanel.classList.contains('active')) {
@@ -377,17 +386,31 @@ function createControlElements(isStudent){
       emojisPanel.classList.remove("disable");
       emojisPanel.classList.add("active");
       emojisPanel.classList.remove("hidden");
-      smileEmojiIcon.addEventListener('click', ()=>{
-        emitReaction(mySocket.id, reactions.THUMBS_UP)
+      checkMarkIcon.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.CHECK_MARK)
       })
+      clappingHandsEmojiIcon.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.CLAP)
+      })
+      crossMarkEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.CROSS_MARK)
+      })
+      redHeartEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.RED_HEART)
+      })
+      redQuestionEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.RED_QUESTION_MARK)
+      })
+      laughingEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.LAUGH)
+      })
+      thumbsUpEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.THUMBS_UP)
+      })    
     }
   })
   raiseHandIcon.addEventListener('click', ()=>{
     onRaiseHand()
-  })
-
-  smileEmojiIcon.addEventListener('click', ()=>{
-   // onReaction()
   })
 
   focusModeIcon.addEventListener('click', ()=>{
@@ -409,12 +432,12 @@ function createControlElements(isStudent){
     }
   })
 
-  if (!isStudent){
-    raiseHandIcon.classList.add('hidden');
-    focusModeIcon.classList.add('shown');
-  }else{
+  if (isStudent){
     focusModeIcon.classList.add('hidden');
     raiseHandIcon.classList.add('shown');
+  }else{
+    raiseHandIcon.classList.add('hidden');
+    focusModeIcon.classList.add('shown');
   }
 }
 

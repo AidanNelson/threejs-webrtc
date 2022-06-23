@@ -365,7 +365,7 @@ function makeHandMaterial(){
 }
 
 function makeEmojiMaterial(file){
-  const emojiTexture = new THREE.TextureLoader().load(`../assets/${file}`);
+  const emojiTexture = new THREE.TextureLoader().load(`../assets/reactions/${file}`);
   const myGeometry = new THREE.BoxGeometry( .40, .40, .40 );
   const emojiMaterial = new THREE.MeshBasicMaterial( { map: emojiTexture } );
   return new THREE.Mesh(myGeometry, emojiMaterial)
