@@ -73,6 +73,10 @@ class Scene {
 
   addLights() {
     this.scene.add(new THREE.AmbientLight(0xffffe6, 0.7));
+
+    const light = new THREE.PointLight( 0xffe6ff, 5, 1000 );
+    light.position.set( 500, 500, 500 );
+    this.scene.add( light );
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -87,9 +91,12 @@ class Scene {
     let handMaterial = makeHandMaterial()
     //let emojiMaterial = makeEmojiMaterial()
     let otherMat = new THREE.MeshNormalMaterial();
+    let bodyMat = new THREE.MeshPhongMaterial({
+      color: peers[id].isStudent ? 0x0000ff : 0xff0000,
+    });
 
     let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.2), [otherMat,otherMat,otherMat,otherMat,otherMat,videoMaterial]);
-    let body = new THREE.Mesh(new THREE.SphereGeometry( 0.7, 32, 16 ), otherMat);
+    let body = new THREE.Mesh(new THREE.SphereGeometry( 0.7, 32, 16 ), bodyMat);
 
     // set position of head before adding to parent object
     head.position.set(0, 0.3, 0);
