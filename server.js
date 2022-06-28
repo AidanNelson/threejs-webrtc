@@ -31,16 +31,7 @@ const io = require("socket.io")().listen(server);
 // an object where we will store innformation about active clients
 let peers = {};
 
-function main() {
-  setupSocketServer();
-
-  setInterval(function () {
-    // update all clients of positions
-    io.sockets.emit("positions", peers);
-  }, 10);
-}
-
-main();
+setupSocketServer();
 
 function setupSocketServer() {
   // Set up each socket connection
@@ -53,35 +44,74 @@ function setupSocketServer() {
       " peer(s) connected."
     );
 
-    //Add a new client indexed by their socket id
-    peers[socket.id] = {
-      position: [0, 0.5, 0],
-      rotation: [0, 0, 0, 1], // stored as XYZW values of Quaternion
-    };
+    socket.on("addUsername" , (data, callback)=>{
+      const username = data['userName']
+      const isStudent = data['isStudent']
+      //Add a new client indexed by their socket id
+      peers[socket.id] = {
+        username,
+        position: [0, 0.5, 0],
+        rotation: [0, 0, 0, 1], // stored as XYZW values of Quaternion
+        isStudent,
+        handRaised:false,
+        disableMove:false
+      };
 
-    // Make sure to send the client their ID and a list of ICE servers for WebRTC network traversal
-    socket.emit(
-      "introduction",
-      Object.keys(peers)
-    );
+      newUser()
+      onMove()
+      onRaiseHand()
+      receiveReaction()
+      emitPositons()
+      onSignal()
+      onDisconnect()
+      onDrawPath()
+      onFocus()
+      callback(peers);
+    })
 
-    // also give the client all existing clients positions:
-    socket.emit("userPositions", peers);
+    function onRaiseHand(){
+      socket.on("onRaiseHand" , (id)=>{
+          try{
+            peers[id].handRaised = true
+            io.emit("onHandRaised", id);
+          }catch(err){
+            console.error(err)
+          }
+      })
+    }
 
-    //Update everyone that the number of users has changed
-    io.emit(
-      "newUserConnected",
-      socket.id
-    );
+    function receiveReaction(){
+      socket.on("receiveReaction" , (data)=>{
+        const {id, reaction} = data;
+        io.emit("spreadReaction", {id, reaction});
+      })
+    }
 
-    // whenever the client moves, update their movements in the clients object
-    socket.on("move", (data) => {
-      if (peers[socket.id]) {
-        peers[socket.id].position = data[0];
-        peers[socket.id].rotation = data[1];
-      }
-    });
+    function newUser(){
+      io.emit(
+        "newUser",
+        {socketId: socket.id, username: peers[socket.id].username}
+      );
+    }
+    function onMove(){
+      // whenever the client moves, update their movements in the clients object
+      socket.on("move", (data) => {
+        //console.log("==> "+socket.id+" : "+peers[socket.id].disableMove)
+        if (peers[socket.id] && !peers[socket.id].disableMove) {
+          peers[socket.id].position = data[0];
+          peers[socket.id].rotation = data[1];
+        }
+      });
+    }
 
+    function emitPositons() {
+      setInterval(function () {
+        // update all clients of positions
+        io.sockets.emit("positions", peers);
+      }, 10);
+    }
+
+    function onSignal(){
     // Relay simple-peer signals back and forth
     socket.on("signal", (to, from, data) => {
       if (to in peers) {
@@ -90,7 +120,9 @@ function setupSocketServer() {
         console.log("Peer not found!");
       }
     });
+    }
 
+    function onDisconnect(){
     //Handle the disconnection
     socket.on("disconnect", () => {
       //Delete this client from the object
@@ -109,5 +141,20 @@ function setupSocketServer() {
         " clients connected"
       );
     });
+    }
+
+    function onDrawPath(){
+    //Handle the drawing of paths
+    socket.on("drawPath", (data) => {
+      io.sockets.emit("peerDrawPath", data);
+    });
+    }
+
+    function onFocus(){
+      // Handle the focus mode event
+      socket.on("focusMode", () => {
+        io.sockets.emit("focused");
+      });
+    }
   });
 }

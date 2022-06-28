@@ -17,6 +17,31 @@ let peers = {};
 
 // Variable to store our three.js scene:
 let myScene;
+let drawBoard;
+
+const reactions = {
+  THUMBS_UP:{
+    reactionFile: 'thumbs-up.svg'
+  },
+  LAUGH:{
+    reactionFile: 'laughing.svg'
+  },
+  CHECK_MARK:{
+    reactionFile: 'check-mark-button.svg'
+  },
+  CROSS_MARK:{
+    reactionFile: 'cross-mark.svg'
+  },
+  RED_HEART:{
+    reactionFile: 'red-heart.svg'
+  },
+  RED_QUESTION_MARK:{
+    reactionFile: 'red-question-mark.svg'
+  },
+  CLAP:{
+    reactionFile: 'clapping-hands.svg'
+  }
+}
 
 // set video width / height / framerate here:
 const videoWidth = 80;
@@ -35,30 +60,68 @@ let mediaConstraints = {
     frameRate: videoFrameRate,
   },
 };
+let userForm, userFormArea, canvasContainer, userName, startButton
 
 ////////////////////////////////////////////////////////////////////////////////
 // Start-Up Sequence:
 ////////////////////////////////////////////////////////////////////////////////
 
-window.onload = async () => {
-  console.log("Window loaded.");
+window.onload = () => {
+  console.log("Initializing socket.io...");
+  mySocket = io();
 
-  // first get user media
-  localMediaStream = await getMedia(mediaConstraints);
+  mySocket.on("connect", () => {
+    console.log("My socket ID:", mySocket.id);
+  });
 
-  createLocalVideoElement();
+   userForm = document.getElementById("userForm");
+   userFormArea = document.getElementById("userFormArea");
+   canvasContainer = document.getElementById("canvas-container");
+   userName = document.getElementById("username");
+   startAsStudent = document.getElementById("student");
+   startAsTutor = document.getElementById("tutor");
 
-  // then initialize socket connection
-  initSocketConnection();
+   startAsStudent.onclick = (e)=> {
+    e.preventDefault()
+    handleForm(userName.value, true)
+    }
+   startAsTutor.onclick = (e)=> {
+     e.preventDefault()
+     handleForm(userName.value, false)
+    }
+};
 
-  // finally create the threejs scene
-  console.log("Creating three.js scene...");
-  myScene = new Scene();
+const handleForm = (userName, isStudent)=>{
+    mySocket.emit('addUsername',
+        {userName, isStudent}
+    , async (existingPeers)=> {
 
-  // start sending position data to the server
-  setInterval(function () {
-    mySocket.emit("move", myScene.getPlayerPosition());
-  }, 200);
+        userForm.style.display = "none";
+        // first get user media
+        localMediaStream = await getMedia(mediaConstraints);
+
+        createLocalVideoElement();
+
+        createControlElements(isStudent)
+
+        // then initialize socket connection
+        initSocketConnection();
+
+        drawBoard = new DrawingBoard('drawingCanvas');
+
+        // create the threejs scene
+        console.log("Creating three.js scene...");
+        myScene = new Scene(isStudent);
+
+        processExistingPeers(existingPeers)
+
+        // start sending position data to the server
+        setInterval(function () {
+          mySocket.emit("move", myScene.getPlayerPosition());
+        }, 200);
+
+    });
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,66 +142,114 @@ async function getMedia(_mediaConstraints) {
   return stream;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Socket.io
-////////////////////////////////////////////////////////////////////////////////
+function processNewPeer(obj){
+  const theirId = obj.socketId
+  const username = obj.username
+  if (theirId != mySocket.id && !(theirId in peers)) {
+    console.log("A new user connected with the ID: " + theirId);
 
-// establishes socket connection
-function initSocketConnection() {
-  console.log("Initializing socket.io...");
-  mySocket = io();
+    console.log("Adding client with id " + theirId);
+    peers[theirId] = {};
 
-  mySocket.on("connect", () => {
-    console.log("My socket ID:", mySocket.id);
-  });
+    createClientMediaElements(theirId);
 
-  //On connection server sends the client his ID and a list of all keys
-  mySocket.on("introduction", (otherClientIds) => {
+    peers = myScene.addClient(theirId, username, peers);
+    myScene.updateWhiteboardVideos(peers);
+  }
+}
 
-    // for each existing user, add them as a client and add tracks to their peer connection
-    for (let i = 0; i < otherClientIds.length; i++) {
-      if (otherClientIds[i] != mySocket.id) {
-        let theirId = otherClientIds[i];
+function processExistingPeers(newPeers){
+  let idsArray = Object.keys(newPeers)
+  let newPeersArray = Object.values(newPeers)
+  // for each existing user, add them as a client and add tracks to their peer connection
+  for (let i = 0; i < idsArray.length; i++) {
 
-        console.log("Adding client with id " + theirId);
-        peers[theirId] = {};
+    if (idsArray[i] != mySocket.id) {
+      let theirId = idsArray[i];
+      let theirPeer = newPeersArray[i]
 
-        let pc = createPeerConnection(theirId, true);
-        peers[theirId].peerConnection = pc;
+      console.log("Adding client with id: ", theirId, " and peer: ", theirPeer);
+      peers[theirId] = theirPeer;
 
-        createClientMediaElements(theirId);
-
-        myScene.addClient(theirId);
-
-      }
-    }
-  });
-
-  // when a new user has entered the server
-  mySocket.on("newUserConnected", (theirId) => {
-    if (theirId != mySocket.id && !(theirId in peers)) {
-      console.log("A new user connected with the ID: " + theirId);
-
-      console.log("Adding client with id " + theirId);
-      peers[theirId] = {};
+      let pc = createPeerConnection(theirId, true);
+      peers[theirId].peerConnection = pc;
 
       createClientMediaElements(theirId);
 
-      myScene.addClient(theirId);
+      peers = myScene.addClient(theirId, theirPeer.username, peers);
     }
-  });
+  }
+  myScene.updateWhiteboardVideos(peers);
+}
 
+////////////////////////////////////////////////////////////////////////////////
+// Socket.io
+////////////////////////////////////////////////////////////////////////////////
+function initSocketConnection() {
+  onNewUser()
+  onUserDisconnected()
+  onSignal()
+  onPositions()
+  onPeerDrawPath()
+  onHandRaised()
+  spreadReaction()
+  onFocused()
+}
+
+function emitReaction(id, reaction){
+  console.log('click 2', reaction)
+  mySocket.emit('receiveReaction', {id, reaction})
+}
+
+function spreadReaction(){
+  
+  mySocket.on("spreadReaction", (obj) => {
+    console.log('client received  reaction', obj)
+      myScene.handleReaction(obj)
+  });
+}
+
+function onNewUser (){
+  mySocket.on("newUser", (obj)=>{
+    processNewPeer(obj)
+  })
+}
+
+function onHandRaised(){
+  mySocket.on("onHandRaised", (id) => {
+    myScene.raiseHand(id);
+  });
+}
+
+function onRaiseHand(){
+  mySocket.emit('onRaiseHand', mySocket.id)
+}
+
+function onFocus(){
+  mySocket.emit('focusMode');
+}
+
+function onFocused(){
+  // Update when one of the users moves in space
+  mySocket.on("focused", () => {
+    myScene.setPlayerPositionToCenter()
+  });
+}
+
+function onUserDisconnected(){
   mySocket.on("userDisconnected", (clientCount, _id, _ids) => {
     // Update the data from the server
-
     if (_id != mySocket.id) {
       console.log("A user disconnected with the id: " + _id);
       myScene.removeClient(_id);
       removeClientVideoElementAndCanvas(_id);
       delete peers[_id];
     }
+    myScene.updateWhiteboardVideos(peers);
   });
+}
 
+function onSignal(){
   mySocket.on("signal", (to, from, data) => {
     // console.log("Got a signal from the server: ", to, from, data);
 
@@ -163,10 +274,19 @@ function initSocketConnection() {
       peerConnection.signal(data);
     }
   });
+}
 
+function onPositions(){
   // Update when one of the users moves in space
   mySocket.on("positions", (_clientProps) => {
     myScene.updateClientPositions(_clientProps);
+  });
+}
+
+function onPeerDrawPath(){
+  // Update when one of the users moves in space
+  mySocket.on("peerDrawPath", (path) => {
+    drawBoard.updateCanvas(path);
   });
 }
 
@@ -237,6 +357,89 @@ function onPlayerMove() {
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 // Utilities 🚂
+
+function createControlElements(isStudent){
+  document.getElementById('controlsBox').classList.remove('hidden')
+  document.getElementById('controlsBox').classList.add('shown-f')
+
+  const reactIcon = document.getElementById('reactIcon')
+  const focusModeIcon = document.getElementById('focusModeIcon')
+  const drawBoardIcon = document.getElementById('drawBoardIcon');
+  const emojisPanel = document.getElementById('emojisPanel');
+  const raiseHandIcon = document.getElementById('raiseHandIcon');
+
+  // reactions
+  const checkMarkIcon = document.getElementById('checkMarkIcon');
+  const clappingHandsEmojiIcon = document.getElementById('clappingHandsEmojiIcon');
+  const crossMarkEmoji = document.getElementById('crossMarkEmoji');
+  const redHeartEmoji = document.getElementById('redHeartEmoji');
+  const redQuestionEmoji = document.getElementById('redQuestionEmoji');
+  const laughingEmoji = document.getElementById('laughingEmoji');
+  const thumbsUpEmoji = document.getElementById('thumbsUpEmoji');
+
+  reactIcon.addEventListener('click', ()=>{
+    if (emojisPanel.classList.contains('active')) {
+      emojisPanel.classList.remove("active");
+      emojisPanel.classList.add("disable");
+      emojisPanel.classList.add("hidden");
+    } else {
+      emojisPanel.classList.remove("disable");
+      emojisPanel.classList.add("active");
+      emojisPanel.classList.remove("hidden");
+      checkMarkIcon.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.CHECK_MARK)
+      })
+      clappingHandsEmojiIcon.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.CLAP)
+      })
+      crossMarkEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.CROSS_MARK)
+      })
+      redHeartEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.RED_HEART)
+      })
+      redQuestionEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.RED_QUESTION_MARK)
+      })
+      laughingEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.LAUGH)
+      })
+      thumbsUpEmoji.addEventListener('click', ()=>{
+        emitReaction(mySocket.id, reactions.THUMBS_UP)
+      })    
+    }
+  })
+  raiseHandIcon.addEventListener('click', ()=>{
+    onRaiseHand()
+  })
+
+  focusModeIcon.addEventListener('click', ()=>{
+    onFocus()
+  })
+
+  drawBoardIcon.addEventListener('click', () => {
+    const drawBoard = document.getElementById('screen');
+    if (drawBoard.getAttribute('class') === 'showDrawBoard') {
+      console.log("hiding draw board");
+      drawBoard.removeAttribute('class');
+      drawBoardIcon.setAttribute('src', '../assets/showDrawBoard.svg');
+      drawBoardIcon.setAttribute('alt', 'Show Drawing Board');
+    } else {
+      console.log("showing draw board");
+      drawBoardIcon.setAttribute('src', '../assets/hideDrawBoard.svg');
+      drawBoardIcon.setAttribute('alt', 'Hide Drawing Board');
+      drawBoard.setAttribute('class', 'showDrawBoard');
+    }
+  })
+
+  if (isStudent){
+    focusModeIcon.classList.add('hidden');
+    raiseHandIcon.classList.add('shown');
+  }else{
+    raiseHandIcon.classList.add('hidden');
+    focusModeIcon.classList.add('shown');
+  }
+}
 
 // created <video> element for local mediastream
 function createLocalVideoElement() {

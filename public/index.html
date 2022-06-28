@@ -9,34 +9,64 @@
 
 	<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
+	<link rel="stylesheet" href="styles.css">
+
 	<script src="js/libs/socket.io.min.js"></script>
 	<script src="js/libs/three.min.js"></script>
 	<script src="js/libs/firstPersonControls.js"></script>
 	<script src="js/libs/simplepeer.min.js"></script>
+	<script src="js/libs/paper-full.min.js"></script>
+	<script type="application/javascript">
+		paper.install(window);
+	</script>
 
+	<script src="https://unpkg.com/three-spritetext"></script>
 	<script src="js/environment.js"></script>
 	<script src="js/scene.js"></script>
 	<script src="js/index.js"></script>
-
-	<style>
-		body {
-			overflow: hidden;
-		}
-
-		#info {
-			padding: 1em;
-			border: 1em;
-			color: rgb(223, 223, 223);
-		}
-	</style>
-
+	<script src="js/canvas.js"></script>
 
 </head>
 
-<body style="background: yellow; margin: 0; padding: 0">
+<body>
+	<div id="screen">
+		<canvas id="drawingCanvas" height="300px" width="450px"></canvas>
+		<div id="canvas-container"></div>
+	</div>
+	<form id="userForm">
+		<h1>3D Meeting Room</h1>
+		<p>Enter your name to continue.</p>
+		<div class="input-wrapper">
+		  <input type="text" placeholder="Your name" id="username"/>
+		  <i class="bx bxs-user-circle"></i>
+		</div>
+		<div>
+		  <button type="submit" id="tutor">
+			Start as Tutor
+			<i class='bx bx-right-arrow-alt'></i>
+			</button>
 
-	<div id="canvas-container"></div>
-
+			<button type="submit" id="student">
+				Start as Student
+				<i class='bx bx-right-arrow-alt'></i>
+				</button>
+		</div>
+	  </form>
+	<div id="controlsBox" class="hidden">
+		<img id="reactIcon" src="../assets/thumbs-up.png" alt="Reactions" height="30" width="30" />
+		<img id="focusModeIcon" src="../assets/target.png" alt="Focus Mode" height="32" width="32" />
+		<img id="raiseHandIcon" src="../assets/open-hand.png" alt="Raise Hand" height="32" width="32" />
+		<img id="drawBoardIcon" src="../assets/showDrawBoard.svg" alt="Show Drawing Board" height="32" width="32" />
+	</div>
+	<div id="emojisPanel" class="hidden">
+		<img id="checkMarkIcon" src="../assets/reactions/check-mark-button.svg" alt="Check Mark Emoji" height="32" width="32" />
+		<img id="clappingHandsEmojiIcon" src="../assets/reactions/clapping-hands.svg" alt="Clapping Hands Emoji" height="32" width="32" />
+		<img id="crossMarkEmoji" src="../assets/reactions/cross-mark.svg" alt="Cross Mark Emoji" height="32" width="32" />
+		<img id="redHeartEmoji" src="../assets/reactions/red-heart.svg" alt="Red Heart Emoji" height="32" width="32" />
+		<img id="redQuestionEmoji" src="../assets/reactions/red-question-mark.svg" alt="Red Question Emoji" height="32" width="32" />
+		<img id="laughingEmoji" src="../assets/reactions/laughing.svg" alt="Laughing Emoji" height="32" width="32" />
+		<img id="thumbsUpEmoji" src="../assets/reactions/thumbs-up.svg" alt="Thumbs up Emoji" height="32" width="32" />
+	</div>
 </body>
 
 </html>
