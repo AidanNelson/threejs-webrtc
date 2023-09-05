@@ -32,7 +32,7 @@ class Scene {
     // create an AudioListener and add it to the camera
     this.listener = new THREE.AudioListener();
     this.camera.add(this.listener);
-
+    this.sound = new THREE.Audio(this.listener);
     //THREE WebGL renderer
     this.renderer = new THREE.WebGLRenderer({
       antialiasing: true,
@@ -99,6 +99,20 @@ class Scene {
     peers[id].desiredRotation = new THREE.Quaternion();
   }
 
+  makePositionalAudio(id) {
+    let positionalAudio = new THREE.PositionalAudio(this.listener);
+    let audioEl = document.getElementById(id + "_audio");
+    positionalAudio.setMediaStreamSource(audioEl.srcObject);
+    //positionalAudio.play();
+    positionalAudio.setRefDistance(0.5);
+    positionalAudio.setMaxDistance(10);
+    positionalAudio.setDirectionalCone(180,230,0.1);
+    positionalAudio.setVolume(1.0);
+    //console.log("positionalAudio.isPlaying:"+ positionalAudio.isPlaying);
+    //audioEl.play();
+    peers[id].group.add(positionalAudio);
+  }
+
   removeClient(id) {
     this.scene.remove(peers[id].group);
   }
@@ -138,13 +152,13 @@ class Scene {
           peers[id].group.position
         );
 
-        if (distSquared > 500) {
-          audioEl.volume = 0;
-        } else {
-          // from lucasio here: https://discourse.threejs.org/t/positionalaudio-setmediastreamsource-with-webrtc-question-not-hearing-any-sound/14301/29
-          let volume = Math.min(1, 10 / distSquared);
-          audioEl.volume = volume;
-        }
+        // if (distSquared > 500) {
+        //   audioEl.volume = 0;
+        // } else {
+        //   // from lucasio here: https://discourse.threejs.org/t/positionalaudio-setmediastreamsource-with-webrtc-question-not-hearing-any-sound/14301/29
+        //   let volume = Math.min(1, 10 / distSquared);
+        //   audioEl.volume = volume;
+        // }
       }
     }
   }
@@ -203,6 +217,13 @@ class Scene {
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(this.width, this.height);
+  }
+
+  onmousedown(e) {
+    if(this.sound.state !== "running") sound.resume();
+  }
+  touchend(e) {
+    if(this.sound.state !== "running") sound.resume();
   }
 }
 

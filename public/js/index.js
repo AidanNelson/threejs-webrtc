@@ -40,7 +40,13 @@ let mediaConstraints = {
 // Start-Up Sequence:
 ////////////////////////////////////////////////////////////////////////////////
 
-window.onload = async () => {
+let startButton = document.getElementById( 'startButton' );
+startButton.addEventListener( 'click', init );
+
+async function init(){
+
+  const overlay = document.getElementById('overlay');
+  overlay.remove();
   console.log("Window loaded.");
 
   // first get user media
@@ -288,6 +294,10 @@ function updateClientMediaElements(_id, stream) {
 
   let audioEl = document.getElementById(_id + "_audio");
   audioEl.srcObject = audioStream;
+  audioEl.muted = true;
+  audioEl.autoplay = true;
+  audioEl.loop = true;
+  myScene.makePositionalAudio(_id);
 }
 
 // remove <video> element and corresponding <canvas> using client ID
