@@ -8,10 +8,9 @@
     "start": "node server.js"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.17.1",
-    "simple-peer": "^9.11.0",
+    "express": "^4.19.2",
     "socket.io": "^4.7.5"
   }
 }
