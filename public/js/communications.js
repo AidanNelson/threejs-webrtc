@@ -22,7 +22,7 @@ export class Communications {
 
     this.initialize();
 
-    this.userDefinedCallbacks = { peerJoined: [], peerLeft: [] };
+    this.userDefinedCallbacks = { peerJoined: [], peerLeft: [], positions: [] };
   }
 
   async initialize() {
@@ -49,21 +49,16 @@ export class Communications {
 
     // then initialize socket connection
     this.initSocketConnection();
-
-    // finally create the threejs scene
-    console.log("Creating three.js scene...");
-    // myScene = new Scene();
-
-    // start sending position data to the server
-    // setInterval(function () {
-    //   this.socket.emit("move", myScene.getPlayerPosition());
-    // }, 200);
   }
 
   // add a callback for a given event
   on(event, callback) {
     console.log(`Setting ${event} callback.`);
     this.userDefinedCallbacks[event].push(callback);
+  }
+
+  sendPosition(position){
+    this.socket.emit("move",position);
   }
 
   callEventCallback(event, data) {
@@ -179,9 +174,9 @@ export class Communications {
     });
 
     // Update when one of the users moves in space
-    // this.socket.on("positions", (_clientProps) => {
-    //   myScene.updateClientPositions(_clientProps);
-    // });
+    this.socket.on("positions", (_clientProps) => {
+      this.callEventCallback("positions", _clientProps);
+    });
   }
 
   // this function sets up a peer connection and corresponding DOM elements for a specific client

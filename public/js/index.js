@@ -29,6 +29,9 @@ function init() {
   communications.on("peerLeft", (id) => {
     removeClient(id);
   });
+  communications.on("positions", (positions) => {
+    updateClientPositions(positions);
+  });
 
   let width = window.innerWidth;
   let height = window.innerHeight * 0.9;
@@ -127,19 +130,18 @@ function removeClient(id) {
 }
 
 // overloaded function can deal with new info or not
-function updateClientPositions(clientProperties) {
+function updateClientPositions(positions) {
   lerpValue = 0;
-  for (let id in clientProperties) {
-    if (id != mySocket.id) {
-      peers[id].previousPosition.copy(peers[id].group.position);
-      peers[id].previousRotation.copy(peers[id].group.quaternion);
-      peers[id].desiredPosition = new THREE.Vector3().fromArray(
-        clientProperties[id].position
-      );
-      peers[id].desiredRotation = new THREE.Quaternion().fromArray(
-        clientProperties[id].rotation
-      );
-    }
+  for (let id in positions) {
+    if (!peers[id]) continue;
+    peers[id].previousPosition.copy(peers[id].group.position);
+    peers[id].previousRotation.copy(peers[id].group.quaternion);
+    peers[id].desiredPosition = new THREE.Vector3().fromArray(
+      positions[id].position
+    );
+    peers[id].desiredRotation = new THREE.Quaternion().fromArray(
+      positions[id].rotation
+    );
   }
 }
 
@@ -209,6 +211,11 @@ function update() {
 
   if (frameCount % 25 === 0) {
     updateClientVolumes();
+  }
+
+  if (frameCount % 10 === 0) {
+    let position = getPlayerPosition();
+    communications.sendPosition(position);
   }
 
   interpolatePositions();
