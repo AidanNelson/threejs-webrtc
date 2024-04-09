@@ -1,8 +1,8 @@
 // controls implementation from https://github.com/yorb-club/YORB2020
 // includes simple collision detection
 // just add meshes to layer 3 to have them become collidable!
-
-class FirstPersonControls {
+import * as THREE from "three";
+export class FirstPersonControls {
     constructor(scene, camera, renderer) {
         this.scene = scene
         this.camera = camera
@@ -378,8 +378,8 @@ class FirstPersonControls {
 
     computeCameraOrientation() {
         this.lat = Math.max(-85, Math.min(85, this.lat))
-        this.phi = THREE.Math.degToRad(90 - this.lat)
-        this.theta = THREE.Math.degToRad(this.lon)
+        this.phi = THREE.MathUtils.degToRad(90 - this.lat)
+        this.theta = THREE.MathUtils.degToRad(this.lon)
         this.camera.target.x = 500 * Math.sin(this.phi) * Math.cos(this.theta)
         this.camera.target.y = 500 * Math.cos(this.phi)
         this.camera.target.z = 500 * Math.sin(this.phi) * Math.sin(this.theta)

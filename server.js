@@ -1,43 +1,34 @@
 /*
  *
- * This uses code from a THREE.js Multiplayer boilerplate made by Or Fleisher:
- * https://github.com/juniorxsound/THREE.Multiplayer
- * And a WEBRTC chat app made by Mikołaj Wargowski:
- * https://github.com/Miczeq22/simple-chat-app
- *
- * Aidan Nelson, April 2020
- *
+ * This is the server which runs all Websocket and WebRTC communications for our application.
  *
  */
 
-// express will run our server
+// Set up an express application to run the server
 const express = require("express");
 const app = express();
+
+// tell our express application to serve the 'public' folder
 app.use(express.static("public"));
 
-// HTTP will expose our server to the web
-const http = require("http").createServer(app);
-
-// decide on which port we will use
+// tell the server to listen on a given port
 const port = process.env.PORT || 8080;
-
-//Server
 const server = app.listen(port);
-console.log("Server is running on http://localhost:" + port);
+console.log("Webserver is running on http://localhost:" + port);
 
-/////SOCKET.IO///////
+// We will use the socket.io library to manage Websocket connections
 const io = require("socket.io")().listen(server);
 
-// an object where we will store innformation about active clients
+// We will use this object to store information about active peers
 let peers = {};
 
 function main() {
   setupSocketServer();
 
+  // periodically update all peers with their positions
   setInterval(function () {
-    // update all clients of positions
     io.sockets.emit("positions", peers);
-  }, 10);
+  }, 100);
 }
 
 main();
@@ -48,38 +39,35 @@ function setupSocketServer() {
     console.log(
       "Peer joined with ID",
       socket.id,
-      ". There are " +
-      io.engine.clientsCount +
-      " peer(s) connected."
+      ". There are " + io.engine.clientsCount + " peer(s) connected."
     );
 
-    //Add a new client indexed by their socket id
+    // add a new peer indexed by their socket id
     peers[socket.id] = {
       position: [0, 0.5, 0],
       rotation: [0, 0, 0, 1], // stored as XYZW values of Quaternion
     };
 
-    // Make sure to send the client their ID and a list of ICE servers for WebRTC network traversal
-    socket.emit(
-      "introduction",
-      Object.keys(peers)
-    );
+    // send the new peer a list of all other peers
+    socket.emit("introduction", Object.keys(peers));
 
-    // also give the client all existing clients positions:
+    // also give the peer all existing peers positions:
     socket.emit("userPositions", peers);
 
-    //Update everyone that the number of users has changed
-    io.emit(
-      "newUserConnected",
-      socket.id
-    );
+    // tell everyone that a new user connected
+    io.emit("peerConnection", socket.id);
 
-    // whenever the client moves, update their movements in the clients object
+    // whenever the peer moves, update their movements in the peers object
     socket.on("move", (data) => {
       if (peers[socket.id]) {
         peers[socket.id].position = data[0];
         peers[socket.id].rotation = data[1];
       }
+    });
+
+    // setup a generic ping-pong which can be used to share arbitrary info between peers
+    socket.on("data", (data) => {
+      io.sockets.emit("data", data);
     });
 
     // Relay simple-peer signals back and forth
@@ -91,22 +79,16 @@ function setupSocketServer() {
       }
     });
 
-    //Handle the disconnection
+    // handle disconnections
     socket.on("disconnect", () => {
-      //Delete this client from the object
       delete peers[socket.id];
-      io.sockets.emit(
-        "userDisconnected",
-        io.engine.clientsCount,
-        socket.id,
-        Object.keys(peers)
-      );
+      io.sockets.emit("peerDisconnection", socket.id);
       console.log(
-        "User " +
-        socket.id +
-        " diconnected, there are " +
-        io.engine.clientsCount +
-        " clients connected"
+        "Peer " +
+          socket.id +
+          " diconnected, there are " +
+          io.engine.clientsCount +
+          " peer(s) connected."
       );
     });
   });

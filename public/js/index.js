@@ -1,301 +1,245 @@
 /*
  *
- * This uses code from a THREE.js Multiplayer boilerplate made by Or Fleisher:
- * https://github.com/juniorxsound/THREE.Multiplayer
- * And a WEBRTC chat app made by Mikołaj Wargowski:
- * https://github.com/Miczeq22/simple-chat-app
- *
- * Aidan Nelson, April 2020
+ * This file sets up our web app with 3D scene and communications.
  *
  */
 
-// socket.io
-let mySocket;
+import * as THREE from "three";
+import { Communications } from "./communications.js";
+import { FirstPersonControls } from "./libs/firstPersonControls.js";
 
-// array of connected clients
+// lerp value to be used when interpolating positions and rotations
+let lerpValue = 0;
+
+let camera, renderer, scene;
+let controls;
+let listener;
+let communications;
+
+let frameCount = 0;
 let peers = {};
 
-// Variable to store our three.js scene:
-let myScene;
+function init() {
+  scene = new THREE.Scene();
 
-// set video width / height / framerate here:
-const videoWidth = 80;
-const videoHeight = 60;
-const videoFrameRate = 15;
+  communications = new Communications();
 
-// Our local media stream (i.e. webcam and microphone stream)
-let localMediaStream = null;
-
-// Constraints for our local audio/video stream
-let mediaConstraints = {
-  audio: true,
-  video: {
-    width: videoWidth,
-    height: videoHeight,
-    frameRate: videoFrameRate,
-  },
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Start-Up Sequence:
-////////////////////////////////////////////////////////////////////////////////
-
-window.onload = async () => {
-  console.log("Window loaded.");
-
-  // first get user media
-  localMediaStream = await getMedia(mediaConstraints);
-
-  createLocalVideoElement();
-
-  // then initialize socket connection
-  initSocketConnection();
-
-  // finally create the threejs scene
-  console.log("Creating three.js scene...");
-  myScene = new Scene();
-
-  // start sending position data to the server
-  setInterval(function () {
-    mySocket.emit("move", myScene.getPlayerPosition());
-  }, 200);
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Local media stream setup
-////////////////////////////////////////////////////////////////////////////////
-
-// https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
-async function getMedia(_mediaConstraints) {
-  let stream = null;
-
-  try {
-    stream = await navigator.mediaDevices.getUserMedia(_mediaConstraints);
-  } catch (err) {
-    console.log("Failed to get user media!");
-    console.warn(err);
-  }
-
-  return stream;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Socket.io
-////////////////////////////////////////////////////////////////////////////////
-
-// establishes socket connection
-function initSocketConnection() {
-  console.log("Initializing socket.io...");
-  mySocket = io();
-
-  mySocket.on("connect", () => {
-    console.log("My socket ID:", mySocket.id);
+  communications.on("peerJoined", (id) => {
+    addPeer(id);
+  });
+  communications.on("peerLeft", (id) => {
+    removePeer(id);
+  });
+  communications.on("positions", (positions) => {
+    updatePeerPositions(positions);
   });
 
-  //On connection server sends the client his ID and a list of all keys
-  mySocket.on("introduction", (otherClientIds) => {
+  // it may take a few seconds for this communications class to be initialized
+  setTimeout(() => {
+    communications.sendData("hello");
+  }, 2000);
+  communications.on("data", (data) => {
+    console.log("Received data:", data);
+  });
 
-    // for each existing user, add them as a client and add tracks to their peer connection
-    for (let i = 0; i < otherClientIds.length; i++) {
-      if (otherClientIds[i] != mySocket.id) {
-        let theirId = otherClientIds[i];
+  let width = window.innerWidth;
+  let height = window.innerHeight * 0.9;
 
-        console.log("Adding client with id " + theirId);
-        peers[theirId] = {};
+  camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 5000);
+  camera.position.set(0, 3, 6);
+  scene.add(camera);
 
-        let pc = createPeerConnection(theirId, true);
-        peers[theirId].peerConnection = pc;
+  // create an AudioListener and add it to the camera
+  listener = new THREE.AudioListener();
+  camera.add(listener);
 
-        createClientMediaElements(theirId);
+  //THREE WebGL renderer
+  renderer = new THREE.WebGLRenderer({
+    antialiasing: true,
+  });
+  renderer.setClearColor(new THREE.Color("lightblue"));
+  renderer.setSize(width, height);
 
-        myScene.addClient(theirId);
+  // add controls:
+  controls = new FirstPersonControls(scene, camera, renderer);
 
+  //Push the canvas to the DOM
+  let domElement = document.getElementById("canvas-container");
+  domElement.append(renderer.domElement);
+
+  //Setup event listeners for events and handle the states
+  window.addEventListener("resize", (e) => onWindowResize(e), false);
+
+  // Helpers
+  scene.add(new THREE.GridHelper(500, 500));
+  scene.add(new THREE.AxesHelper(10));
+
+  addLights();
+
+  // Start the loop
+  update();
+}
+
+init();
+
+
+//////////////////////////////////////////////////////////////////////
+// Lighting 💡
+//////////////////////////////////////////////////////////////////////
+
+function addLights() {
+  scene.add(new THREE.AmbientLight(0xffffe6, 0.7));
+}
+
+//////////////////////////////////////////////////////////////////////
+// Clients 👫
+//////////////////////////////////////////////////////////////////////
+
+// add a client meshes, a video element and  canvas for three.js video texture
+function addPeer(id) {
+  let videoElement = document.getElementById(id + "_video");
+  let videoTexture = new THREE.VideoTexture(videoElement);
+
+  let videoMaterial = new THREE.MeshBasicMaterial({
+    map: videoTexture,
+    overdraw: true,
+    side: THREE.DoubleSide,
+  });
+  let otherMat = new THREE.MeshNormalMaterial();
+
+  let head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), [
+    otherMat,
+    otherMat,
+    otherMat,
+    otherMat,
+    otherMat,
+    videoMaterial,
+  ]);
+
+  // set position of head before adding to parent object
+  head.position.set(0, 0, 0);
+
+  // https://threejs.org/docs/index.html#api/en/objects/Group
+  var group = new THREE.Group();
+  group.add(head);
+
+  // add group to scene
+  scene.add(group);
+
+  peers[id] = {};
+  peers[id].group = group;
+
+  peers[id].previousPosition = new THREE.Vector3();
+  peers[id].previousRotation = new THREE.Quaternion();
+  peers[id].desiredPosition = new THREE.Vector3();
+  peers[id].desiredRotation = new THREE.Quaternion();
+}
+
+function removePeer(id) {
+  scene.remove(peers[id].group);
+}
+
+// overloaded function can deal with new info or not
+function updatePeerPositions(positions) {
+  lerpValue = 0;
+  for (let id in positions) {
+    if (!peers[id]) continue;
+    peers[id].previousPosition.copy(peers[id].group.position);
+    peers[id].previousRotation.copy(peers[id].group.quaternion);
+    peers[id].desiredPosition = new THREE.Vector3().fromArray(
+      positions[id].position
+    );
+    peers[id].desiredRotation = new THREE.Quaternion().fromArray(
+      positions[id].rotation
+    );
+  }
+}
+
+function interpolatePositions() {
+  lerpValue += 0.1; // updates are sent roughly every 1/5 second == 10 frames
+  for (let id in peers) {
+    if (peers[id].group) {
+      peers[id].group.position.lerpVectors(
+        peers[id].previousPosition,
+        peers[id].desiredPosition,
+        lerpValue
+      );
+      peers[id].group.quaternion.slerpQuaternions(
+        peers[id].previousRotation,
+        peers[id].desiredRotation,
+        lerpValue
+      );
+    }
+  }
+}
+
+function updatePeerVolumes() {
+  for (let id in peers) {
+    let audioEl = document.getElementById(id + "_audio");
+    if (audioEl && peers[id].group) {
+      let distSquared = camera.position.distanceToSquared(
+        peers[id].group.position
+      );
+
+      if (distSquared > 500) {
+        audioEl.volume = 0;
+      } else {
+        // from lucasio here: https://discourse.threejs.org/t/positionalaudio-setmediastreamsource-with-webrtc-question-not-hearing-any-sound/14301/29
+        let volume = Math.min(1, 10 / distSquared);
+        audioEl.volume = volume;
       }
     }
-  });
-
-  // when a new user has entered the server
-  mySocket.on("newUserConnected", (theirId) => {
-    if (theirId != mySocket.id && !(theirId in peers)) {
-      console.log("A new user connected with the ID: " + theirId);
-
-      console.log("Adding client with id " + theirId);
-      peers[theirId] = {};
-
-      createClientMediaElements(theirId);
-
-      myScene.addClient(theirId);
-    }
-  });
-
-  mySocket.on("userDisconnected", (clientCount, _id, _ids) => {
-    // Update the data from the server
-
-    if (_id != mySocket.id) {
-      console.log("A user disconnected with the id: " + _id);
-      myScene.removeClient(_id);
-      removeClientVideoElementAndCanvas(_id);
-      delete peers[_id];
-    }
-  });
-
-  mySocket.on("signal", (to, from, data) => {
-    // console.log("Got a signal from the server: ", to, from, data);
-
-    // to should be us
-    if (to != mySocket.id) {
-      console.log("Socket IDs don't match");
-    }
-
-    // Look for the right simplepeer in our array
-    let peer = peers[from];
-    if (peer.peerConnection) {
-      peer.peerConnection.signal(data);
-    } else {
-      console.log("Never found right simplepeer object");
-      // Let's create it then, we won't be the "initiator"
-      // let theirSocketId = from;
-      let peerConnection = createPeerConnection(from, false);
-
-      peers[from].peerConnection = peerConnection;
-
-      // Tell the new simplepeer that signal
-      peerConnection.signal(data);
-    }
-  });
-
-  // Update when one of the users moves in space
-  mySocket.on("positions", (_clientProps) => {
-    myScene.updateClientPositions(_clientProps);
-  });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Clients / WebRTC
-////////////////////////////////////////////////////////////////////////////////
-
-// this function sets up a peer connection and corresponding DOM elements for a specific client
-function createPeerConnection(theirSocketId, isInitiator = false) {
-  console.log('Connecting to peer with ID', theirSocketId);
-  console.log('initiating?', isInitiator);
-
-  let peerConnection = new SimplePeer({ initiator: isInitiator })
-  // simplepeer generates signals which need to be sent across socket
-  peerConnection.on("signal", (data) => {
-    // console.log('signal');
-    mySocket.emit("signal", theirSocketId, mySocket.id, data);
-  });
-
-  // When we have a connection, send our stream
-  peerConnection.on("connect", () => {
-    // Let's give them our stream
-    peerConnection.addStream(localMediaStream);
-    console.log("Send our stream");
-  });
-
-  // Stream coming in to us
-  peerConnection.on("stream", (stream) => {
-    console.log("Incoming Stream");
-
-    updateClientMediaElements(theirSocketId, stream);
-  });
-
-  peerConnection.on("close", () => {
-    console.log("Got close event");
-    // Should probably remove from the array of simplepeers
-  });
-
-  peerConnection.on("error", (err) => {
-    console.log(err);
-  });
-
-  return peerConnection;
-}
-
-// temporarily pause the outgoing stream
-function disableOutgoingStream() {
-  localMediaStream.getTracks().forEach((track) => {
-    track.enabled = false;
-  });
-}
-// enable the outgoing stream
-function enableOutgoingStream() {
-  localMediaStream.getTracks().forEach((track) => {
-    track.enabled = true;
-  });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Three.js
-////////////////////////////////////////////////////////////////////////////////
-
-function onPlayerMove() {
-  // console.log('Sending movement update to server.');
-
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
+// Interaction 🤾‍♀️
 //////////////////////////////////////////////////////////////////////
-// Utilities 🚂
 
-// created <video> element for local mediastream
-function createLocalVideoElement() {
-  const videoElement = document.createElement("video");
-  videoElement.id = "local_video";
-  videoElement.autoplay = true;
-  videoElement.width = videoWidth;
-  videoElement.height = videoHeight;
-  // videoElement.style = "visibility: hidden;";
+function getPlayerPosition() {
+  return [
+    [camera.position.x, camera.position.y, camera.position.z],
+    [
+      camera.quaternion._x,
+      camera.quaternion._y,
+      camera.quaternion._z,
+      camera.quaternion._w,
+    ],
+  ];
+}
 
-  if (localMediaStream) {
-    let videoStream = new MediaStream([localMediaStream.getVideoTracks()[0]]);
+//////////////////////////////////////////////////////////////////////
+// Rendering 🎥
+//////////////////////////////////////////////////////////////////////
 
-    videoElement.srcObject = videoStream;
+function update() {
+  requestAnimationFrame(() => update());
+  frameCount++;
+
+  if (frameCount % 25 === 0) {
+    updatePeerVolumes();
   }
-  document.body.appendChild(videoElement);
-}
 
-// created <video> element using client ID
-function createClientMediaElements(_id) {
-  console.log("Creating <html> media elements for client with ID: " + _id);
-
-  const videoElement = document.createElement("video");
-  videoElement.id = _id + "_video";
-  videoElement.autoplay = true;
-  // videoElement.style = "visibility: hidden;";
-
-  document.body.appendChild(videoElement);
-
-  // create audio element for client
-  let audioEl = document.createElement("audio");
-  audioEl.setAttribute("id", _id + "_audio");
-  audioEl.controls = "controls";
-  audioEl.volume = 1;
-  document.body.appendChild(audioEl);
-
-  audioEl.addEventListener("loadeddata", () => {
-    audioEl.play();
-  });
-}
-
-function updateClientMediaElements(_id, stream) {
-
-  let videoStream = new MediaStream([stream.getVideoTracks()[0]]);
-  let audioStream = new MediaStream([stream.getAudioTracks()[0]]);
-
-  const videoElement = document.getElementById(_id + "_video");
-  videoElement.srcObject = videoStream;
-
-  let audioEl = document.getElementById(_id + "_audio");
-  audioEl.srcObject = audioStream;
-}
-
-// remove <video> element and corresponding <canvas> using client ID
-function removeClientVideoElementAndCanvas(_id) {
-  console.log("Removing <video> element for client with id: " + _id);
-
-  let videoEl = document.getElementById(_id + "_video");
-  if (videoEl != null) {
-    videoEl.remove();
+  if (frameCount % 10 === 0) {
+    let position = getPlayerPosition();
+    communications.sendPosition(position);
   }
+
+  interpolatePositions();
+
+  controls.update();
+
+  renderer.render(scene, camera);
+}
+
+//////////////////////////////////////////////////////////////////////
+// Event Handlers 🍽
+//////////////////////////////////////////////////////////////////////
+
+function onWindowResize(e) {
+  let width = window.innerWidth;
+  let height = Math.floor(window.innerHeight * 0.9);
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
 }
