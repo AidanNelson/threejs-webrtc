@@ -1,16 +1,12 @@
 /*
  *
- * This uses code from a THREE.js Multiplayer boilerplate made by Or Fleisher:
- * https://github.com/juniorxsound/THREE.Multiplayer
- * Aidan Nelson, April 2020
+ * This file sets up our web app with 3D scene and communications.
  *
  */
-
 
 import * as THREE from "three";
 import { Communications } from "./communications.js";
 import { FirstPersonControls } from "./libs/firstPersonControls.js";
-
 
 // lerp value to be used when interpolating positions and rotations
 let lerpValue = 0;
@@ -38,6 +34,14 @@ function init() {
     updatePeerPositions(positions);
   });
 
+  // it may take a few seconds for this communications class to be initialized
+  setTimeout(() => {
+    communications.sendData("hello");
+  }, 2000);
+  communications.on("data", (data) => {
+    console.log("Received data:", data);
+  });
+
   let width = window.innerWidth;
   let height = window.innerHeight * 0.9;
 
@@ -46,7 +50,7 @@ function init() {
   scene.add(camera);
 
   // create an AudioListener and add it to the camera
-  let listener = new THREE.AudioListener();
+  listener = new THREE.AudioListener();
   camera.add(listener);
 
   //THREE WebGL renderer
@@ -75,11 +79,13 @@ function init() {
   // Start the loop
   update();
 }
+
 init();
 
-//////////////////////////////////////////////////////////////////////
+
 //////////////////////////////////////////////////////////////////////
 // Lighting 💡
+//////////////////////////////////////////////////////////////////////
 
 function addLights() {
   scene.add(new THREE.AmbientLight(0xffffe6, 0.7));
@@ -88,7 +94,6 @@ function addLights() {
 //////////////////////////////////////////////////////////////////////
 // Clients 👫
 //////////////////////////////////////////////////////////////////////
-
 
 // add a client meshes, a video element and  canvas for three.js video texture
 function addPeer(id) {

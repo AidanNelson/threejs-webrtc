@@ -1,11 +1,6 @@
 /*
  *
- * This uses code from a THREE.js Multiplayer boilerplate made by Or Fleisher:
- * https://github.com/juniorxsound/THREE.Multiplayer
- * And a WEBRTC chat app made by Mikołaj Wargowski:
- * https://github.com/Miczeq22/simple-chat-app
- *
- * Aidan Nelson, April 2020
+ * This file exports a class which sets up the Websocket and WebRTC communications for our peer.
  *
  */
 
@@ -14,7 +9,7 @@ export class Communications {
     // socket.io
     this.socket;
 
-    // array of connected clients
+    // array of connected peers
     this.peers = {};
 
     // Our local media stream (i.e. webcam and microphone stream)
@@ -22,20 +17,21 @@ export class Communications {
 
     this.initialize();
 
-    this.userDefinedCallbacks = { peerJoined: [], peerLeft: [], positions: [] };
+    this.userDefinedCallbacks = {
+      peerJoined: [],
+      peerLeft: [],
+      positions: [],
+      data: [],
+    };
   }
 
   async initialize() {
-    // Constraints for our local audio/video stream
-    // set video width / height / framerate here:
-
-
     // first get user media
     this.localMediaStream = await this.getLocalMedia();
 
     // createLocalVideoElement();
-    createClientMediaElements("local");
-    updateClientMediaElements("local", this.localMediaStream);
+    createPeerDOMElements("local");
+    updatePeerDOMElements("local", this.localMediaStream);
 
     // then initialize socket connection
     this.initSocketConnection();
@@ -47,8 +43,12 @@ export class Communications {
     this.userDefinedCallbacks[event].push(callback);
   }
 
-  sendPosition(position){
-    this.socket?.emit("move",position);
+  sendPosition(position) {
+    this.socket?.emit("move", position);
+  }
+
+  sendData(data) {
+    this.socket?.emit("data", data);
   }
 
   callEventCallback(event, data) {
@@ -103,49 +103,41 @@ export class Communications {
       console.log("My socket ID:", this.socket.id);
     });
 
-    //On connection server sends the client his ID and a list of all keys
-    this.socket.on("introduction", (otherClientIds) => {
-      // for each existing user, add them as a client and add tracks to their peer connection
-      for (let i = 0; i < otherClientIds.length; i++) {
-        if (otherClientIds[i] != this.socket.id) {
-          let theirId = otherClientIds[i];
+    this.socket.on("data", (data) => {
+      this.callEventCallback("data", data);
+    });
 
-          console.log("Adding client with id " + theirId);
+
+    this.socket.on("introduction", (otherPeerIds) => {
+      for (let i = 0; i < otherPeerIds.length; i++) {
+        if (otherPeerIds[i] != this.socket.id) {
+          let theirId = otherPeerIds[i];
+
+          console.log("Adding peer with id " + theirId);
           this.peers[theirId] = {};
 
           let pc = this.createPeerConnection(theirId, true);
           this.peers[theirId].peerConnection = pc;
 
-          createClientMediaElements(theirId);
+          createPeerDOMElements(theirId);
           this.callEventCallback("peerJoined", theirId);
-          // myScene.addClient(theirId);
         }
       }
     });
 
     // when a new user has entered the server
-    this.socket.on("newUserConnected", (theirId) => {
+    this.socket.on("peerConnection", (theirId) => {
       if (theirId != this.socket.id && !(theirId in this.peers)) {
-        console.log("A new user connected with the ID: " + theirId);
-
-        console.log("Adding client with id " + theirId);
         this.peers[theirId] = {};
-
-        createClientMediaElements(theirId);
+        createPeerDOMElements(theirId);
         this.callEventCallback("peerJoined", theirId);
-
-        // myScene.addClient(theirId);
       }
     });
 
-    this.socket.on("userDisconnected", (clientCount, _id, _ids) => {
-      // Update the data from the server
-
+    this.socket.on("peerDisconnection", (_id) => {
       if (_id != this.socket.id) {
-        console.log("A user disconnected with the id: " + _id);
         this.callEventCallback("peerLeft", _id);
-        // myScene.removeClient(_id);
-        cleanupClientMediaElements(_id);
+        cleanupPeerDomElements(_id);
         delete this.peers[_id];
       }
     });
@@ -176,12 +168,12 @@ export class Communications {
     });
 
     // Update when one of the users moves in space
-    this.socket.on("positions", (_clientProps) => {
-      this.callEventCallback("positions", _clientProps);
+    this.socket.on("positions", (positions) => {
+      this.callEventCallback("positions", positions);
     });
   }
 
-  // this function sets up a peer connection and corresponding DOM elements for a specific client
+  // this function sets up a peer connection and corresponding DOM elements for a specific peer
   createPeerConnection(theirSocketId, isInitiator = false) {
     console.log("Connecting to peer with ID", theirSocketId);
     console.log("initiating?", isInitiator);
@@ -204,12 +196,12 @@ export class Communications {
     peerConnection.on("stream", (stream) => {
       console.log("Incoming Stream");
 
-      updateClientMediaElements(theirSocketId, stream);
+      updatePeerDOMElements(theirSocketId, stream);
     });
 
     peerConnection.on("close", () => {
       console.log("Got close event");
-      // Should probably remove from the array of simplethis.peers
+      // Should probably remove from the array of peers
     });
 
     peerConnection.on("error", (err) => {
@@ -222,10 +214,7 @@ export class Communications {
 
 // Utilities 🚂
 
-// created <video> element using client ID
-function createClientMediaElements(_id) {
-  console.log("Creating <html> media elements for client with ID: " + _id);
-
+function createPeerDOMElements(_id) {
   const videoElement = document.createElement("video");
   videoElement.id = _id + "_video";
   videoElement.autoplay = true;
@@ -234,7 +223,6 @@ function createClientMediaElements(_id) {
 
   document.body.appendChild(videoElement);
 
-  // create audio element for client
   let audioEl = document.createElement("audio");
   audioEl.setAttribute("id", _id + "_audio");
   audioEl.controls = "controls";
@@ -246,7 +234,7 @@ function createClientMediaElements(_id) {
   });
 }
 
-function updateClientMediaElements(_id, stream) {
+function updatePeerDOMElements(_id, stream) {
   let videoStream = new MediaStream([stream.getVideoTracks()[0]]);
   let audioStream = new MediaStream([stream.getAudioTracks()[0]]);
 
@@ -260,12 +248,14 @@ function updateClientMediaElements(_id, stream) {
   }
 }
 
-// remove <video> element and corresponding <canvas> using client ID
-function cleanupClientMediaElements(_id) {
-  console.log("Removing <video> element for client with id: " + _id);
-
+function cleanupPeerDomElements(_id) {
   let videoEl = document.getElementById(_id + "_video");
   if (videoEl != null) {
     videoEl.remove();
+  }
+
+  let audioEl = document.getElementById(_id + "audio");
+  if (audioEl != null) {
+    audioEl.remove();
   }
 }
