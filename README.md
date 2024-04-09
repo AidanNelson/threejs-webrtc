@@ -17,7 +17,7 @@ This [three.js](threejs.org) template allows multiplayer three.js scenes with in
     ```bash
     $ npm start
     ```
-4. Navigate to `http://localhost:1989` on your browser.
+4. Navigate to `http://localhost:8080` on your browser.
 
 ## Technology:
 
