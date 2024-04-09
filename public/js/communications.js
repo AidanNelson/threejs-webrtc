@@ -28,20 +28,10 @@ export class Communications {
   async initialize() {
     // Constraints for our local audio/video stream
     // set video width / height / framerate here:
-    const videoWidth = 80;
-    const videoHeight = 60;
-    const videoFrameRate = 15;
-    let mediaConstraints = {
-      audio: true,
-      video: {
-        width: videoWidth,
-        height: videoHeight,
-        frameRate: videoFrameRate,
-      },
-    };
+
 
     // first get user media
-    this.localMediaStream = await this.getLocalMedia(mediaConstraints);
+    this.localMediaStream = await this.getLocalMedia();
 
     // createLocalVideoElement();
     createClientMediaElements("local");
@@ -58,7 +48,7 @@ export class Communications {
   }
 
   sendPosition(position){
-    this.socket.emit("move",position);
+    this.socket?.emit("move",position);
   }
 
   callEventCallback(event, data) {
@@ -67,11 +57,23 @@ export class Communications {
     });
   }
 
-  async getLocalMedia(_mediaConstraints) {
+  async getLocalMedia() {
+    const videoWidth = 80;
+    const videoHeight = 60;
+    const videoFrameRate = 15;
+    let mediaConstraints = {
+      audio: true,
+      video: {
+        width: videoWidth,
+        height: videoHeight,
+        frameRate: videoFrameRate,
+      },
+    };
+
     let stream = null;
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia(_mediaConstraints);
+      stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
     } catch (err) {
       console.log("Failed to get user media!");
       console.warn(err);
@@ -218,29 +220,7 @@ export class Communications {
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Clients / WebRTC
-////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
 // Utilities 🚂
-
-// created <video> element for local mediastream
-// function createLocalVideoElement(stream) {
-//   if (!stream) return;
-//   const videoElement = document.createElement("video");
-//   videoElement.id = "local_video";
-//   videoElement.autoplay = true;
-//   videoElement.width = videoWidth;
-//   videoElement.height = videoHeight;
-//   // videoElement.style = "visibility: hidden;";
-
-//   let videoStream = new MediaStream([stream.getVideoTracks()[0]]);
-//   videoElement.srcObject = videoStream;
-
-//   document.body.appendChild(videoElement);
-// }
 
 // created <video> element using client ID
 function createClientMediaElements(_id) {

@@ -6,7 +6,12 @@
  *
  */
 
+
+import * as THREE from "three";
 import { Communications } from "./communications.js";
+import { FirstPersonControls } from "./libs/firstPersonControls.js";
+
+
 // lerp value to be used when interpolating positions and rotations
 let lerpValue = 0;
 
@@ -24,13 +29,13 @@ function init() {
   communications = new Communications();
 
   communications.on("peerJoined", (id) => {
-    addClient(id);
+    addPeer(id);
   });
   communications.on("peerLeft", (id) => {
-    removeClient(id);
+    removePeer(id);
   });
   communications.on("positions", (positions) => {
-    updateClientPositions(positions);
+    updatePeerPositions(positions);
   });
 
   let width = window.innerWidth;
@@ -66,7 +71,6 @@ function init() {
   scene.add(new THREE.AxesHelper(10));
 
   addLights();
-  createEnvironment(scene);
 
   // Start the loop
   update();
@@ -82,11 +86,12 @@ function addLights() {
 }
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
 // Clients 👫
+//////////////////////////////////////////////////////////////////////
+
 
 // add a client meshes, a video element and  canvas for three.js video texture
-function addClient(id) {
+function addPeer(id) {
   let videoElement = document.getElementById(id + "_video");
   let videoTexture = new THREE.VideoTexture(videoElement);
 
@@ -125,12 +130,12 @@ function addClient(id) {
   peers[id].desiredRotation = new THREE.Quaternion();
 }
 
-function removeClient(id) {
+function removePeer(id) {
   scene.remove(peers[id].group);
 }
 
 // overloaded function can deal with new info or not
-function updateClientPositions(positions) {
+function updatePeerPositions(positions) {
   lerpValue = 0;
   for (let id in positions) {
     if (!peers[id]) continue;
@@ -163,7 +168,7 @@ function interpolatePositions() {
   }
 }
 
-function updateClientVolumes() {
+function updatePeerVolumes() {
   for (let id in peers) {
     let audioEl = document.getElementById(id + "_audio");
     if (audioEl && peers[id].group) {
@@ -183,11 +188,10 @@ function updateClientVolumes() {
 }
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
 // Interaction 🤾‍♀️
+//////////////////////////////////////////////////////////////////////
 
 function getPlayerPosition() {
-  // TODO: use quaternion or are euler angles fine here?
   return [
     [camera.position.x, camera.position.y, camera.position.z],
     [
@@ -200,17 +204,15 @@ function getPlayerPosition() {
 }
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
 // Rendering 🎥
+//////////////////////////////////////////////////////////////////////
 
 function update() {
   requestAnimationFrame(() => update());
   frameCount++;
 
-  updateEnvironment();
-
   if (frameCount % 25 === 0) {
-    updateClientVolumes();
+    updatePeerVolumes();
   }
 
   if (frameCount % 10 === 0) {
@@ -226,8 +228,8 @@ function update() {
 }
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
 // Event Handlers 🍽
+//////////////////////////////////////////////////////////////////////
 
 function onWindowResize(e) {
   let width = window.innerWidth;
