@@ -38,8 +38,11 @@ function init() {
   setTimeout(() => {
     communications.sendData("hello");
   }, 2000);
-  communications.on("data", (data) => {
-    console.log("Received data:", data);
+  communications.on("data", (msg) => {
+    console.log("Received message:", msg);
+    if (msg.type == "box") {
+      onNewBox(msg);
+    }
   });
 
   let width = window.innerWidth;
@@ -63,6 +66,13 @@ function init() {
   // add controls:
   controls = new FirstPersonControls(scene, camera, renderer);
 
+  // add controls for adding boxes on a key press
+  window.addEventListener("keyup", (ev) => {
+    if (ev.key === "b") {
+      addBox();
+    }
+  });
+
   //Push the canvas to the DOM
   let domElement = document.getElementById("canvas-container");
   domElement.append(renderer.domElement);
@@ -81,7 +91,6 @@ function init() {
 }
 
 init();
-
 
 //////////////////////////////////////////////////////////////////////
 // Lighting 💡
@@ -242,4 +251,27 @@ function onWindowResize(e) {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
+}
+
+function addBox() {
+  let msg = {
+    type: "box",
+    data: {
+      x: camera.position.x,
+      y: camera.position.y,
+      z: camera.position.z,
+    },
+  };
+  communications.sendData(msg);
+}
+
+function onNewBox(msg) {
+  let geo = new THREE.BoxGeometry(1, 1, 1);
+  let mat = new THREE.MeshBasicMaterial();
+  let mesh = new THREE.Mesh(geo, mat);
+
+  let pos = msg.data;
+  mesh.position.set(pos.x, pos.y, pos.z);
+
+  scene.add(mesh);
 }
