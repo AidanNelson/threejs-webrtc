@@ -5,12 +5,13 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --ignore ./public/ server.js"
+    "start": "nodemon --ignore ./public/ server.js --ignore ./mydatabase.json"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "express": "^4.19.2",
+    "nedb": "^1.8.0",
     "socket.io": "^4.7.5"
   },
   "devDependencies": {

@@ -19,6 +19,11 @@ console.log("Webserver is running on http://localhost:" + port);
 // We will use the socket.io library to manage Websocket connections
 const io = require("socket.io")().listen(server);
 
+// add the database application 'nedb'
+const Datastore = require("nedb");
+// create our database and save it to a local file
+const db = new Datastore({ filename: "mydatabase.json", autoload: true });
+
 // We will use this object to store information about active peers
 let peers = {};
 
@@ -54,6 +59,15 @@ function setupSocketServer() {
     // also give the peer all existing peers positions:
     socket.emit("userPositions", peers);
 
+    // also give them existing data in the database
+    db.find({}, (err, docs) => {
+      if (err) return;
+      for (let i = 0; i < docs.length; i++) {
+        let doc = docs[i];
+        socket.emit("data", doc);
+      }
+    });
+
     // tell everyone that a new user connected
     io.emit("peerConnection", socket.id);
 
@@ -67,6 +81,10 @@ function setupSocketServer() {
 
     // setup a generic ping-pong which can be used to share arbitrary info between peers
     socket.on("data", (data) => {
+      // insert data into the database
+      db.insert(data);
+
+      // then send it to all peers
       io.sockets.emit("data", data);
     });
 

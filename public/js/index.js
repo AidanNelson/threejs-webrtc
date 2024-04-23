@@ -33,11 +33,7 @@ function init() {
   communications.on("positions", (positions) => {
     updatePeerPositions(positions);
   });
-
-  // it may take a few seconds for this communications class to be initialized
-  setTimeout(() => {
-    communications.sendData("hello");
-  }, 2000);
+  // deal with incoming data
   communications.on("data", (msg) => {
     console.log("Received message:", msg);
     if (msg.type == "box") {
