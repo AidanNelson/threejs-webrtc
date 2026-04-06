@@ -5,7 +5,7 @@
  */
 
 export class Communications {
-  constructor() {
+  constructor(THREE, scene, camera, renderer) {
     // socket.io
     this.socket;
 
@@ -15,6 +15,10 @@ export class Communications {
     // Our local media stream (i.e. webcam and microphone stream)
     this.localMediaStream = null;
 
+    this.THREE = THREE;
+    this.scene = scene;
+    this.camera = camera;
+    this.renderer = renderer;
     this.initialize();
 
     this.userDefinedCallbacks = {
@@ -58,15 +62,15 @@ export class Communications {
   }
 
   async getLocalMedia() {
-    const videoWidth = 80;
-    const videoHeight = 60;
-    const videoFrameRate = 15;
+    const videoWidth = 160;
+    const videoHeight = 120;
+    const videoFrameRate = 25;
     let mediaConstraints = {
       audio: true,
       video: {
-        width: videoWidth,
-        height: videoHeight,
-        frameRate: videoFrameRate,
+        width: { ideal: videoWidth },
+        height: { ideal: videoHeight },
+        frameRate: { ideal: videoFrameRate },
       },
     };
 
@@ -101,12 +105,34 @@ export class Communications {
 
     this.socket.on("connect", () => {
       console.log("My socket ID:", this.socket.id);
+      
+    });
+
+    document.getElementById("generate").addEventListener("click", () => { 
+      let input = document.getElementById("input");
+      if (input.value) {
+        this.socket.emit("generate", input.value);
+      }
+      input.value = "";
+    });
+    this.socket.on("code", (code) => {
+      console.log(`Received code:\n\n${code}\n\n`);
+      try {
+        const THREE = this.THREE;
+        const scene = this.scene;
+        const camera = this.camera;
+        const renderer = this.renderer;
+        console.log(THREE, scene, camera, renderer);
+        const fn = new Function("THREE", "scene", "camera", "renderer", code);
+        fn(THREE, scene, camera, renderer);
+      } catch (err) {
+        console.error(err.message);
+      }
     });
 
     this.socket.on("data", (data) => {
       this.callEventCallback("data", data);
     });
-
 
     this.socket.on("introduction", (otherPeerIds) => {
       for (let i = 0; i < otherPeerIds.length; i++) {
@@ -219,8 +245,10 @@ function createPeerDOMElements(_id) {
   videoElement.id = _id + "_video";
   videoElement.autoplay = true;
   videoElement.muted = true;
-  // videoElement.style = "visibility: hidden;";
-
+  videoElement.style = "visibility: hidden;";
+  videoElement.addEventListener("loadeddata", () => {
+    videoElement.play();
+  });
   document.body.appendChild(videoElement);
 
   let audioEl = document.createElement("audio");
@@ -228,6 +256,7 @@ function createPeerDOMElements(_id) {
   audioEl.controls = "controls";
   audioEl.volume = 0; // initialize at 0 volume.  This will be set by 3D scene.
   document.body.appendChild(audioEl);
+  audioEl.style = "visibility: hidden;";
 
   audioEl.addEventListener("loadeddata", () => {
     audioEl.play();

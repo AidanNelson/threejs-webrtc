@@ -14,8 +14,8 @@
     <script type="importmap">
       {
         "imports": {
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+          "three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/"
         }
       }
     </script>
@@ -25,10 +25,25 @@
       body {
         overflow: hidden;
       }
+      #input-container {
+        position: absolute;
+        bottom: 1rem;
+        left: 40vw;
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+      }
+      input {
+        width: 200px;
+      }
     </style>
   </head>
 
   <body style="background: yellow; margin: 0; padding: 0">
     <div id="canvas-container"></div>
   </body>
+  <div id="input-container">
+    <input type="text" placeholder="Add a spinning cube..." id="input"></input>
+    <button id="generate">Generate</button>
+  </div>
 </html>

@@ -8,6 +8,11 @@
 const express = require("express");
 const app = express();
 
+const { Ollama } = require("ollama");
+const ollama = new Ollama({
+  host: "http://localhost:11434",
+});
+
 // tell our express application to serve the 'public' folder
 app.use(express.static("public"));
 
@@ -44,7 +49,7 @@ function setupSocketServer() {
     console.log(
       "Peer joined with ID",
       socket.id,
-      ". There are " + io.engine.clientsCount + " peer(s) connected."
+      ". There are " + io.engine.clientsCount + " peer(s) connected.",
     );
 
     // add a new peer indexed by their socket id
@@ -88,6 +93,31 @@ function setupSocketServer() {
       io.sockets.emit("data", data);
     });
 
+    socket.on("generate", async (data) => {
+      const systemPrompt = `Your role is to output three.js code based on the user's request.  Do not include any scene setup code.  Assume the scene, camera, and renderer are already set up and you are only adding elements into the scene or changing existing elements. The following variables are available to you: THREE (the full Three.js namespace), scene (the active Scene), camera (the PerspectiveCamera), renderer (the WebGLRenderer).  You must respond with code only, no other text, and no markdown formatting.  You can make any three.js object updateable by adding a userData.update callback function.`;
+      const response = await ollama.chat({
+        model: "deepseek-coder-v2:latest",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: data },
+        ],
+        format: {
+          type: "object",
+          properties: {
+            code: { type: "string" },
+          },
+          required: ["code"],
+        },
+      });
+      try {
+        const parsed = JSON.parse(response.message.content);
+        console.log(parsed.code);
+        io.sockets.emit("code", parsed.code);
+      } catch (err) {
+        console.error(err.message);
+      }
+    });
+
     // Relay simple-peer signals back and forth
     socket.on("signal", (to, from, data) => {
       if (to in peers) {
@@ -106,7 +136,7 @@ function setupSocketServer() {
           socket.id +
           " diconnected, there are " +
           io.engine.clientsCount +
-          " peer(s) connected."
+          " peer(s) connected.",
       );
     });
   });

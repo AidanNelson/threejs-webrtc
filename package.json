@@ -12,6 +12,7 @@
   "dependencies": {
     "express": "^4.19.2",
     "nedb": "^1.8.0",
+    "ollama": "^0.6.3",
     "socket.io": "^4.7.5"
   },
   "devDependencies": {

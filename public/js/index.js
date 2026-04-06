@@ -22,7 +22,25 @@ let peers = {};
 function init() {
   scene = new THREE.Scene();
 
-  communications = new Communications();
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+
+  camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 5000);
+  camera.position.set(0, 3, 6);
+  scene.add(camera);
+
+  // create an AudioListener and add it to the camera
+  listener = new THREE.AudioListener();
+  camera.add(listener);
+
+  //THREE WebGL renderer
+  renderer = new THREE.WebGLRenderer({
+    antialiasing: true,
+  });
+  renderer.setClearColor(new THREE.Color("lightblue"));
+  renderer.setSize(width, height);
+
+  communications = new Communications(THREE, scene, camera, renderer);
 
   communications.on("peerJoined", (id) => {
     addPeer(id);
@@ -40,24 +58,6 @@ function init() {
       onNewBox(msg);
     }
   });
-
-  let width = window.innerWidth;
-  let height = window.innerHeight * 0.9;
-
-  camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 5000);
-  camera.position.set(0, 3, 6);
-  scene.add(camera);
-
-  // create an AudioListener and add it to the camera
-  listener = new THREE.AudioListener();
-  camera.add(listener);
-
-  //THREE WebGL renderer
-  renderer = new THREE.WebGLRenderer({
-    antialiasing: true,
-  });
-  renderer.setClearColor(new THREE.Color("lightblue"));
-  renderer.setSize(width, height);
 
   // add controls:
   controls = new FirstPersonControls(scene, camera, renderer);
@@ -230,6 +230,15 @@ function update() {
     communications.sendPosition(position);
   }
 
+  scene.traverse((child) => {
+    if (child.userData.update) {
+      try {
+        child.userData.update();
+      } catch (err) {
+        console.error(err.message);
+      }
+    }
+  });
   interpolatePositions();
 
   controls.update();
@@ -271,3 +280,4 @@ function onNewBox(msg) {
 
   scene.add(mesh);
 }
+
